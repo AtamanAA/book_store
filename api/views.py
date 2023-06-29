@@ -5,6 +5,7 @@ from django.views import View
 import json
 
 from book.models import Book
+from author.models import Author
 
 
 class BookView(View):
@@ -140,4 +141,34 @@ class BookIdView(View):
         except Book.DoesNotExist:
             return JsonResponse(
                 {"Error": f"Book with id={book_id} not found"}, status=404
+            )
+
+
+class AuthorView(View):
+    def get(self, request):
+        try:
+            optional_parameters = ["first_name"]
+            filters = {}
+            for key, value in request.GET.items():
+                if key in optional_parameters:
+                    if value:
+                        filters[key] = value
+                else:
+                    return JsonResponse(
+                        {"Error": "Invalid query parameter name"}, status=400
+                    )
+            authors = list(Author.objects.filter(**filters).values())
+            return JsonResponse(authors, safe=False)
+        except ():
+            pass
+
+
+class AuthorIdView(View):
+    def get(self, request, author_id):
+        try:
+            author = list(Author.objects.filter(id=author_id).values())[0]
+            return JsonResponse(author, safe=False)
+        except Author.DoesNotExist:
+            return JsonResponse(
+                {"Error": f"Author with id={author_id} not found"}, status=404
             )
