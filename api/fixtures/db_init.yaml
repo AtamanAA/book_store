@@ -1,0 +1,47 @@
+- model: author.author
+  pk: 1
+  fields:
+    first_name: a_fn1
+    last_name: l1
+    patronymic: p1
+    birthday: 1970-05-20
+- model: author.author
+  pk: 2
+  fields:
+    first_name: a_fn2
+    last_name: l2
+    patronymic: p2
+    birthday: 1970-05-20
+- model: author.author
+  pk: 3
+  fields:
+    first_name: a_fn2
+    last_name: l3
+    patronymic: p3
+    birthday: 1970-05-20
+- model: book.book
+  pk: 1
+  fields:
+    name: b1
+    authors:
+      - 1
+    genre: g1
+    publication_date: 1990-01-01
+- model: book.book
+  pk: 2
+  fields:
+    name: b2
+    authors:
+      - 1
+      - 2
+    genre: g2
+    publication_date: 1990-01-01
+- model: book.book
+  pk: 3
+  fields:
+    name: b3
+    authors:
+      - 3
+    genre: g1
+    publication_date: 1990-01-01
+

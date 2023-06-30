@@ -1,3 +1,4 @@
+from django.http import HttpResponse
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.http import JsonResponse
@@ -166,6 +167,7 @@ class AuthorView(View):
 class AuthorIdView(View):
     def get(self, request, author_id):
         try:
+            Author.objects.get(id=author_id)
             author = list(Author.objects.filter(id=author_id).values())[0]
             return JsonResponse(author, safe=False)
         except Author.DoesNotExist:
