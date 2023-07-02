@@ -1,12 +1,11 @@
-from django.http import HttpResponse
+import json
+
+from author.models import Author
+from book.models import Book
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.http import JsonResponse
 from django.views import View
-import json
-
-from book.models import Book
-from author.models import Author
 
 
 class BookView(View):
@@ -59,11 +58,11 @@ class BookView(View):
             book = Book(name=name, genre=genre, publication_date=publication_date)
             book.save()
 
-            if not isinstance(authors, int):
+            if isinstance(authors, int):
+                book.authors.add(authors)
+            else:
                 for author in authors:
                     book.authors.add(author)
-            else:
-                book.authors.add(authors)
 
             return JsonResponse(book.get_info(), safe=False)
 
@@ -96,11 +95,11 @@ class BookIdView(View):
             authors = request_body.get("authors")
             if authors:
                 book.authors.clear()
-            if not isinstance(authors, int):
+            if isinstance(authors, int):
+                book.authors.add(authors)
+            else:
                 for author in authors:
                     book.authors.add(author)
-            else:
-                book.authors.add(authors)
 
             optional_parameters = ["name", "genre", "publication_date"]
             update_param = {}

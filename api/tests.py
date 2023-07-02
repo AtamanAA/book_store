@@ -1,9 +1,9 @@
 import json
 import pathlib
-import pytest
-from django.test import Client
-from django.core.management import call_command
 
+import pytest
+from django.core.management import call_command
+from django.test import Client
 
 root = pathlib.Path(__file__).parent
 
