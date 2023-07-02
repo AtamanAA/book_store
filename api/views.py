@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db.utils import IntegrityError
 from django.http import JsonResponse
 from django.views import View
 import json
@@ -32,7 +32,7 @@ class BookView(View):
     def post(self, request):
         try:
             request_body = json.loads(request.body)
-        except ValueError:
+        except (ValueError, TypeError):
             return JsonResponse({"Error": "Invalid json"}, status=400)
 
         name = request_body.get("name")
@@ -40,9 +40,15 @@ class BookView(View):
         genre = request_body.get("genre")
         publication_date = request_body.get("publication_date")
 
-        for param in request_body:
-            if not param:
-                return JsonResponse({"Error": "Missing data fields"}, status=400)
+        for author_id in authors:
+            try:
+                Author.objects.get(id=author_id)
+            except Author.DoesNotExist:
+                return JsonResponse(
+                    {"Error": f"Author with id={author_id} not found"}, status=404
+                )
+            except ValueError:
+                return JsonResponse({"Error": "Invalid authors field"}, status=400)
 
         try:
             if len(name) > 128:
@@ -64,11 +70,9 @@ class BookView(View):
         except ValueError:
             return JsonResponse({"Error": "Invalid authors field"}, status=400)
         except TypeError:
-            return JsonResponse({"Error": "Invalid fields name"}, status=400)
+            return JsonResponse({"Error": "Invalid type or empty fields"}, status=400)
         except ValidationError:
             return JsonResponse({"Error": "Invalid publication_date field"}, status=400)
-        except IntegrityError:
-            return JsonResponse({"Error": "Authors doesn't found"}, status=400)
 
 
 class BookIdView(View):
@@ -126,11 +130,11 @@ class BookIdView(View):
         except ValueError:
             return JsonResponse({"Error": "Invalid authors field"}, status=400)
         except TypeError:
-            return JsonResponse({"Error": "Invalid fields name"}, status=400)
+            return JsonResponse({"Error": "Invalid type or empty fields"}, status=400)
         except ValidationError:
             return JsonResponse({"Error": "Invalid publication_date field"}, status=400)
         except IntegrityError:
-            return JsonResponse({"Error": "Authors doesn't found"}, status=400)
+            return JsonResponse({"Error": "Authors doesn't found"}, status=404)
 
     def delete(self, request, book_id):
         try:
