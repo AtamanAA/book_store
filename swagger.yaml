@@ -1,0 +1,333 @@
+openapi: 3.0.3
+info:
+  title: Book store
+  description: |-
+    Book store with simple API
+  version: 1.0.2
+servers:
+  - url: https://ataman-book-store-71ea28220527.herokuapp.com/api
+tags:
+  - name: books
+    description: All books in store
+  - name: authors
+    description: All books authors
+paths:
+  /books/:
+    get:
+      tags:
+        - books
+      summary: Show all books in the store with optional filters
+      description: Returns a list books
+      operationId: getBooks
+      parameters:
+        - name: name
+          in: query
+          description: name book
+          required: false
+          schema:
+            type: string
+        - name: genre
+          in: query
+          description: books genre
+          required: false
+          schema:
+            type: string
+        - name: authors
+          in: query
+          description: books authors
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+        '404':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - books
+      summary: Add a new book to the store
+      description: Add a new book to the store
+      operationId: addBook
+      requestBody:
+        description: Create a new book in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book_request_body'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          description: Invalid input
+  /books/{bookId}:
+    get:
+      tags:
+        - books
+      summary: Find book by ID
+      description: Returns a single book
+      operationId: getBookById
+      parameters:
+        - name: bookId
+          in: path
+          description: ID of book to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Book not found
+    put:
+      tags:
+        - books
+      summary: Update book by ID
+      description: Update book in the store
+      operationId: updateBook
+      parameters:
+        - name: bookId
+          in: path
+          description: ID of book to put
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Update book in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Book_request_put_body'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book_after_update'
+        '404':
+          description: Invalid input
+    delete:
+      tags:
+        - books
+      summary: Delete book by ID
+      description: Delete book from the store
+      operationId: deleteBook
+      parameters:
+        - name: bookId
+          in: path
+          description: ID of book to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book_after_update'
+        '404':
+          description: Book not found
+
+  /authors/:
+    get:
+      tags:
+        - authors
+      summary: Show all authors in the store with optional filters
+      description: Returns authors list
+      operationId: getAuthors
+      parameters:
+        - name: first_name
+          in: query
+          description: first_name
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Author'
+        '404':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /authors/{authorId}:
+    get:
+      tags:
+        - authors
+      summary: Find author by ID
+      description: Returns a single author
+      operationId: getAuthorById
+      parameters:
+        - name: authorId
+          in: path
+          description: ID of author to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Author not found
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        name:
+          type: string
+          example: The Adventures of Sherlock Holmes
+        authors:
+          type: array
+          items:
+            type: string
+          example: [
+            Artur Conan Doyle,
+            Adrian Conan Doyle
+          ]
+        publication_date:
+          type: string
+          format: date
+          example: 1892-01-24
+    Book_request_body:
+      type: object
+      properties:
+        name:
+          type: string
+          example: The Adventures of Sherlock Holmes
+        authors:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example: [
+            1,
+            2
+          ]
+        publication_date:
+          type: string
+          format: date
+          example: 1892-01-24
+    Book_request_put_body:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Update name
+        authors:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example: [
+            1,
+          ]
+        publication_date:
+          type: string
+          format: date
+          example: 1892-01-24
+    Book_after_update:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        name:
+          type: string
+          example: Update name
+        authors:
+          type: array
+          items:
+            type: string
+          example: [
+            Artur Conan Doyle
+          ]
+        publication_date:
+          type: string
+          format: date
+          example: 1892-01-24
+    Author:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        first_name:
+          type: string
+          example: Artur
+        last_name:
+          type: string
+          example: Conan
+        patronymic:
+          type: string
+          example: Doyle
+        birthday:
+          type: string
+          format: date
+          example: 1859-05-22
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 404
+        message:
+          type: string
+          example: Invalid query parameter
+
+  requestBodies:
+    Book:
+      description: Book object that needs to be added to the store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Book_request_body'
