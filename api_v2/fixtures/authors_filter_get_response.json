@@ -1,0 +1,16 @@
+[
+  {
+    "id": 2,
+    "first_name": "a_fn2",
+    "last_name": "l2",
+    "patronymic": "p2",
+    "birthday": "1970-05-20"
+  },
+  {
+    "id": 3,
+    "first_name": "a_fn2",
+    "last_name": "l3",
+    "patronymic": "p3",
+    "birthday": "1970-05-20"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "b1",
+    "authors": [
+      "a_fn1 l1 p1"
+    ],
+    "genre": "g1",
+    "publication_date": "1990-01-01"
+  },
+  {
+    "id": 2,
+    "name": "b2",
+    "authors": [
+      "a_fn1 l1 p1",
+      "a_fn2 l2 p2"
+    ],
+    "genre": "g2",
+    "publication_date": "1990-01-01"
+  },
+  {
+    "id": 3,
+    "name": "b3",
+    "authors": [
+      "a_fn2 l3 p3"
+    ],
+    "genre": "g1",
+    "publication_date": "1990-01-01"
+  }
+]
