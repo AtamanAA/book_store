@@ -42,6 +42,9 @@ if IS_HEROKU_APP:
 else:
     ALLOWED_HOSTS = []
 
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = ["*"]
 
 # Application definition
 
@@ -59,6 +62,7 @@ INSTALLED_APPS = [
     "api",
     "api_v2",
     "rest_framework",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -69,6 +73,7 @@ MIDDLEWARE = [
     # See: https://whitenoise.readthedocs.io
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
