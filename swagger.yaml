@@ -53,7 +53,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error_400_get'
     post:
       tags:
         - books
@@ -65,7 +65,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Book_request_body'
+              $ref: '#/components/schemas/Book_post_request_body'
         required: true
       responses:
         '200':
@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error_book_post'
+                $ref: '#/components/schemas/Error_400_book_post'
   /books/{bookId}:
     get:
       tags:
@@ -127,7 +127,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Book_request_put_body'
+              $ref: '#/components/schemas/Book_put_request_body'
         required: true
       responses:
         '200':
@@ -141,7 +141,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error_book_put'
+                $ref: '#/components/schemas/Error_400_book_put'
         '404':
           description: Not found
           content:
@@ -204,7 +204,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error_400_get'
     post:
       tags:
         - authors
@@ -216,7 +216,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Author_request_post_body'
+              $ref: '#/components/schemas/Author_post_request_body'
         required: true
       responses:
         '200':
@@ -278,7 +278,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Author_request_put_body'
+              $ref: '#/components/schemas/Author_put_request_body'
         required: true
       responses:
         '200':
@@ -353,7 +353,7 @@ components:
           type: string
           format: date
           example: 1892-01-24
-    Book_request_body:
+    Book_post_request_body:
       type: object
       properties:
         name:
@@ -375,7 +375,7 @@ components:
           type: string
           format: date
           example: 1892-01-24
-    Book_request_put_body:
+    Book_put_request_body:
       type: object
       properties:
         name:
@@ -446,7 +446,7 @@ components:
           type: string
           format: date
           example: 1859-05-22
-    Author_request_post_body:
+    Author_post_request_body:
       type: object
       properties:
         first_name:
@@ -462,7 +462,7 @@ components:
           type: string
           format: date
           example: 1965-07-31
-    Author_request_put_body:
+    Author_put_request_body:
       type: object
       properties:
         first_name:
@@ -505,13 +505,13 @@ components:
           type: string
           example: Author with id=10 success delete
 
-    Error:
+    Error_400_get:
       type: object
       properties:
         Error:
           type: string
           example: Invalid query parameter
-    Error_book_post:
+    Error_400_book_post:
       type: object
       properties:
         name:
@@ -534,7 +534,7 @@ components:
           items:
             type: string
             example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
-    Error_book_put:
+    Error_400_book_put:
       type: object
       properties:
         name:
@@ -605,11 +605,3 @@ components:
           items:
             type: string
             example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
-
-  requestBodies:
-    Book:
-      description: Book object that needs to be added to the store
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Book_request_body'
