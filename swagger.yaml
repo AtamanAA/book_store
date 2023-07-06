@@ -5,7 +5,7 @@ info:
     Book store with simple API
   version: 1.0.2
 servers:
-  - url: https://ataman-book-store-71ea28220527.herokuapp.com/api
+  - url: https://ataman-book-store-71ea28220527.herokuapp.com/api/v2
 tags:
   - name: books
     description: All books in store
@@ -17,7 +17,7 @@ paths:
       tags:
         - books
       summary: Show all books in the store with optional filters
-      description: Returns a list books
+      description: Returns books list
       operationId: getBooks
       parameters:
         - name: name
@@ -48,7 +48,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Book'
-        '404':
+        '400':
           description: Bad request
           content:
             application/json:
@@ -74,8 +74,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Book'
-        '404':
-          description: Invalid input
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_book_post'
   /books/{bookId}:
     get:
       tags:
@@ -98,10 +102,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Book'
-        '400':
-          description: Invalid ID supplied
         '404':
-          description: Book not found
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_Book'
     put:
       tags:
         - books
@@ -130,8 +136,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Book_after_update'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_book_put'
         '404':
-          description: Invalid input
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_Book'
     delete:
       tags:
         - books
@@ -152,9 +168,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Book_after_update'
+                $ref: '#/components/schemas/Book_after_delete'
         '404':
-          description: Book not found
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_Book'
 
   /authors/:
     get:
@@ -179,12 +199,38 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Author'
-        '404':
+        '400':
           description: Bad request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - authors
+      summary: Add a new author to the store
+      description: Add a new author to the store
+      operationId: addAuthor
+      requestBody:
+        description: Create a new author in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Author_request_post_body'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_400_author_post'
   /authors/{authorId}:
     get:
       tags:
@@ -207,10 +253,79 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Author'
-        '400':
-          description: Invalid ID supplied
         '404':
-          description: Author not found
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_Author'
+    put:
+      tags:
+        - authors
+      summary: Update author by ID
+      description: Update author in the store
+      operationId: updateAuthor
+      parameters:
+        - name: authorId
+          in: path
+          description: ID of author to put
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Update author in the store
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Author_request_put_body'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author_after_update'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_400_author_put'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_Author'
+    delete:
+      tags:
+        - authors
+      summary: Delete author by ID
+      description: Delete author from the store
+      operationId: deleteAuthor
+      parameters:
+        - name: authorId
+          in: path
+          description: ID of author to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author_after_delete'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_Author'
 components:
   schemas:
     Book:
@@ -231,6 +346,9 @@ components:
             Artur Conan Doyle,
             Adrian Conan Doyle
           ]
+        genre:
+          type: string
+          example: Novel
         publication_date:
           type: string
           format: date
@@ -250,6 +368,9 @@ components:
             1,
             2
           ]
+        genre:
+          type: string
+          example: Novel
         publication_date:
           type: string
           format: date
@@ -268,6 +389,9 @@ components:
           example: [
             1,
           ]
+        genre:
+          type: string
+          example: Update genre
         publication_date:
           type: string
           format: date
@@ -289,10 +413,19 @@ components:
           example: [
             Artur Conan Doyle
           ]
+        genre:
+          type: string
+          example: Update genre
         publication_date:
           type: string
           format: date
           example: 1892-01-24
+    Book_after_delete:
+      type: object
+      properties:
+        Success:
+          type: string
+          example: Book with id=10 success delete
     Author:
       type: object
       properties:
@@ -313,16 +446,165 @@ components:
           type: string
           format: date
           example: 1859-05-22
+    Author_request_post_body:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: Rowling
+        last_name:
+          type: string
+          example: Joanne
+        patronymic:
+          type: string
+          example: Kathleen
+        birthday:
+          type: string
+          format: date
+          example: 1965-07-31
+    Author_request_put_body:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: Update first name
+        last_name:
+          type: string
+          example: Update last name
+        patronymic:
+          type: string
+          example: Update patronymic
+        birthday:
+          type: string
+          format: date
+          example: 1970-07-31
+    Author_after_update:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        first_name:
+          type: string
+          example: Update first name
+        last_name:
+          type: string
+          example: Update last name
+        patronymic:
+          type: string
+          example: Update patronymic
+        birthday:
+          type: string
+          format: date
+          example: 1970-07-31
+    Author_after_delete:
+      type: object
+      properties:
+        Success:
+          type: string
+          example: Author with id=10 success delete
+
     Error:
       type: object
       properties:
-        code:
-          type: integer
-          format: int32
-          example: 404
-        message:
+        Error:
           type: string
           example: Invalid query parameter
+    Error_book_post:
+      type: object
+      properties:
+        name:
+          type: array
+          items:
+            type: string
+            example: Ensure this field has no more than 128 characters.
+        authors:
+          type: array
+          items:
+            type: string
+            example: Expected a list of items but got type "str".
+        genre:
+          type: array
+          items:
+            type: string
+            example: This field is required.
+        publication_date:
+          type: array
+          items:
+            type: string
+            example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
+    Error_book_put:
+      type: object
+      properties:
+        name:
+          type: array
+          items:
+            type: string
+            example: Ensure this field has no more than 128 characters.
+        authors:
+          type: array
+          items:
+            type: string
+            example: Expected a list of items but got type "str".
+        genre:
+          type: array
+          items:
+            type: string
+            example: Ensure this field has no more than 40 characters..
+        publication_date:
+          type: array
+          items:
+            type: string
+            example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
+    Error_404_Book:
+      type: object
+      properties:
+        Error:
+          type: string
+          example: Book with id=100 not found
+    Error_404_Author:
+      type: object
+      properties:
+        Error:
+          type: string
+          example: Author with id=100 not found
+    Error_400_author_post:
+      type: object
+      properties:
+        first_name:
+          type: array
+          items:
+            type: string
+            example: Ensure this field has no more than 20 characters.
+        last_name:
+          type: array
+          items:
+            type: string
+            example: This field is required.
+        birthday:
+          type: array
+          items:
+            type: string
+            example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
+    Error_400_author_put:
+      type: object
+      properties:
+        first_name:
+          type: array
+          items:
+            type: string
+            example: Ensure this field has no more than 20 characters.
+        last_name:
+          type: array
+          items:
+            type: string
+            example: Ensure this field has no more than 20 characters.
+        birthday:
+          type: array
+          items:
+            type: string
+            example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
 
   requestBodies:
     Book:
