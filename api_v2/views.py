@@ -158,6 +158,7 @@ def expire_view_cache(request, view_name, args=None, key_prefix=None):
         request_meta = {
                 "SERVER_NAME": request.get_host().split(":")[0],
                 # "SERVER_PORT": request.get_host().split(":")[1]
+                "SERVER_PORT": ""
             }
         # request_meta = {"SERVER_NAME": "0.0.0.0", "SERVER_PORT": "34515"}
 
