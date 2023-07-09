@@ -160,7 +160,7 @@ def expire_view_cache(request, view_name, args=None, key_prefix=None):
     else:
         request_meta = {
                 "SERVER_NAME": request.META["SERVER_NAME"],
-                "SERVER_PORT": request.META["SERVER_PORT"]
+                "SERVER_PORT": request.META["SERVER_PORT_"]
             }
         # request_meta = {"SERVER_NAME": "0.0.0.0", "SERVER_PORT": "4091"}
 
