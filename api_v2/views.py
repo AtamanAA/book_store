@@ -148,12 +148,16 @@ class AuthorIdView(APIView):
 
 
 def expire_view_cache(request, view_name, args=None, key_prefix=None):
+
+    check_host = request.get_host()
+
+
     if request.get_host() == "testserver":
         request_meta = {"SERVER_NAME": "127.0.0.1", "SERVER_PORT": "8000"}
     else:
         request_meta = {
                 "SERVER_NAME": request.get_host().split(":")[0],
-                "SERVER_PORT": request.get_port()
+                "SERVER_PORT": request.get_host().split(":")[1]
             }
         # request_meta = {"SERVER_NAME": "0.0.0.0", "SERVER_PORT": "34515"}
 
