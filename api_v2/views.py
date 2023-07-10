@@ -1,5 +1,3 @@
-import os
-
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpRequest
@@ -19,9 +17,6 @@ class BookView(APIView):
     @method_decorator(cache_page(60 * 5))
     def get(self, request):
         try:
-
-            check_meta = request.META
-
             optional_parameters = ["name", "genre", "authors"]
             filters = {}
             for key, value in request.GET.items():
@@ -153,28 +148,13 @@ class AuthorIdView(APIView):
 
 
 def expire_view_cache(request, view_name, args=None, key_prefix=None):
-
-    check_host = request.get_host()
-    check_meta = request.META
-    check_server_name = request.META["SERVER_NAME"]
-    check_server_port = request.META["SERVER_PORT"]
-
-
     if request.get_host() == "testserver":
         request_meta = {"SERVER_NAME": "127.0.0.1", "SERVER_PORT": "8000"}
     else:
-        # request_meta = {
-        #         "SERVER_NAME": request.META["SERVER_NAME"],
-        #         "SERVER_PORT": request.META["SERVER_PORT"]
-        #     }
-
         request_meta = {
-                "SERVER_NAME": request.META["SERVER_NAME"],
-                "SERVER_PORT": int(os.environ.get("PORT", 17995))
-            }
-        # request_meta = {"SERVER_NAME": "0.0.0.0", "SERVER_PORT": "48508"}
-        # port = int(os.environ.get("PORT", 17995)
-
+            "SERVER_NAME": request.META["SERVER_NAME"],
+            "SERVER_PORT": request.META["SERVER_PORT"],
+        }
 
     request = HttpRequest()
     request.META = request_meta
