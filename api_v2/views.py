@@ -17,6 +17,9 @@ class BookView(APIView):
     @method_decorator(cache_page(60 * 5))
     def get(self, request):
         try:
+
+            check_meta = request.META
+
             optional_parameters = ["name", "genre", "authors"]
             filters = {}
             for key, value in request.GET.items():
@@ -27,7 +30,7 @@ class BookView(APIView):
                     return JsonResponse(
                         {"Error": "Invalid query parameter name"}, status=400
                     )
-            books = [book.get_info() for book in Book.objects.filter(**filters)]
+            books_ = [book.get_info() for book in Book.objects.filter(**filters)]
             return JsonResponse(books, safe=False)
         except ValueError:
             return JsonResponse(
@@ -160,10 +163,9 @@ def expire_view_cache(request, view_name, args=None, key_prefix=None):
     else:
         request_meta = {
                 "SERVER_NAME": request.META["SERVER_NAME"],
-                "SERVER_PORT": request.META["SERVER_PORT_"]
+                "SERVER_PORT": request.META["SERVER_PORT"]
             }
         # request_meta = {"SERVER_NAME": "0.0.0.0", "SERVER_PORT": "4091"}
-
 
 
     request = HttpRequest()
