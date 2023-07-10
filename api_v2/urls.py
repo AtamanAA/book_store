@@ -6,8 +6,7 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
-from .views import BookView, BookIdView, AuthorView, AuthorIdView
-
+from .views import BookView, BookIdView, AuthorView, AuthorIdView, CreateUserView
 
 urlpatterns = [
     path("books/", csrf_exempt(BookView.as_view()), name="all_books"),
@@ -17,4 +16,5 @@ urlpatterns = [
     path("token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    path("user/register/", csrf_exempt(CreateUserView.as_view()), name="register_user"),
 ]

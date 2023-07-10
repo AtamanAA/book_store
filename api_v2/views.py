@@ -6,12 +6,13 @@ from django.urls import reverse
 from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from author.models import Author
 from book.models import Book
-from .serializers import AuthorSerializer, BookSerializer
+from .serializers import AuthorSerializer, BookSerializer, UserSerializer
 
 
 class BookView(APIView):
@@ -189,3 +190,7 @@ def expire_view_cache(request, view_name, args=None, key_prefix=None):
             return False
     else:
         return False
+
+
+class CreateUserView(CreateAPIView):
+    serializer_class = UserSerializer
