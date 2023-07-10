@@ -7,6 +7,7 @@ from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 from author.models import Author
 from book.models import Book
@@ -14,6 +15,10 @@ from .serializers import AuthorSerializer, BookSerializer
 
 
 class BookView(APIView):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+
     @method_decorator(cache_page(60 * 5))
     def get(self, request):
         try:
@@ -45,6 +50,10 @@ class BookView(APIView):
 
 
 class BookIdView(APIView):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+
     def get(self, request, book_id):
         try:
             book = Book.objects.get(id=book_id)
@@ -83,6 +92,10 @@ class BookIdView(APIView):
 
 
 class AuthorView(APIView):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+
     @method_decorator(cache_page(60 * 5))
     def get(self, request):
         optional_parameters = ["first_name"]
@@ -109,6 +122,10 @@ class AuthorView(APIView):
 
 
 class AuthorIdView(APIView):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+
     def get(self, request, author_id):
         try:
             author = Author.objects.get(id=author_id)
