@@ -6,9 +6,11 @@ from django.urls import reverse
 from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from rest_framework import viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from django.contrib.auth.models import User
 
 from author.models import Author
 from book.models import Book
@@ -192,5 +194,9 @@ def expire_view_cache(request, view_name, args=None, key_prefix=None):
         return False
 
 
-class CreateUserView(CreateAPIView):
+class UserViewSet(viewsets.ModelViewSet):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
     serializer_class = UserSerializer
+    queryset = User.objects.all()

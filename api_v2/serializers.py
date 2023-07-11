@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password, ValidationError
 from rest_framework import serializers
 
 from author.models import Author
@@ -20,13 +21,6 @@ class BookSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
-    def create(self, validated_data):
-        user = User.objects.create_user(
-            username=validated_data["username"],
-            password=validated_data["password"],
-        )
-        return user
-
     class Meta:
         model = User
         fields = (
@@ -34,3 +28,17 @@ class UserSerializer(serializers.ModelSerializer):
             "username",
             "password",
         )
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data["username"],
+            password=validated_data["password"],
+        )
+        return user
+
+    def validate_password(self, value):
+        try:
+            validate_password(value)
+        except ValidationError as exc:
+            raise serializers.ValidationError(str(exc))
+        return value
