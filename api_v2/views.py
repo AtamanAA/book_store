@@ -1,9 +1,4 @@
-from django.conf import settings
-from django.core.cache import cache
-from django.http import HttpRequest
 from django.http import JsonResponse
-from django.urls import reverse
-from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework.views import APIView
@@ -39,7 +34,6 @@ class BookView(APIView):
         if serializer.is_valid():
             serializer.save()
             book = Book.objects.get(id=serializer.data["id"])
-            expire_view_cache(request, "all_books")
             return JsonResponse(book.get_info(), safe=False)
         return JsonResponse(serializer.errors, status=400)
 
@@ -60,7 +54,6 @@ class BookIdView(APIView):
             serializer = BookSerializer(book, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
-                expire_view_cache(request, "all_books")
                 return JsonResponse(book.get_info(), safe=False)
             return JsonResponse(serializer.errors, status=400)
         except Book.DoesNotExist:
@@ -72,7 +65,6 @@ class BookIdView(APIView):
         try:
             book = Book.objects.get(id=book_id)
             book.delete()
-            expire_view_cache(request, "all_books")
             return JsonResponse(
                 {"Success": f"Book with id={book_id} success delete"}, status=200
             )
@@ -103,7 +95,6 @@ class AuthorView(APIView):
         serializer = AuthorSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            expire_view_cache(request, "all_authors")
             return JsonResponse(serializer.data, safe=False)
         return JsonResponse(serializer.errors, status=400)
 
@@ -125,7 +116,6 @@ class AuthorIdView(APIView):
             serializer = AuthorSerializer(author, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
-                expire_view_cache(request, "all_authors")
                 return JsonResponse(serializer.data, safe=False)
             return JsonResponse(serializer.errors, status=400)
         except Author.DoesNotExist:
@@ -137,7 +127,6 @@ class AuthorIdView(APIView):
         try:
             author = Author.objects.get(id=author_id)
             author.delete()
-            expire_view_cache(request, "all_authors")
             return JsonResponse(
                 {"Success": f"Author with id={author_id} success delete"}, status=200
             )
@@ -145,30 +134,3 @@ class AuthorIdView(APIView):
             return JsonResponse(
                 {"Error": f"Author with id={author_id} not found"}, status=404
             )
-
-
-def expire_view_cache(request, view_name, args=None, key_prefix=None):
-    if request.get_host() == "testserver":
-        request_meta = {"SERVER_NAME": "127.0.0.1", "SERVER_PORT": "8000"}
-    else:
-        request_meta = {
-            "SERVER_NAME": request.META["SERVER_NAME"],
-            "SERVER_PORT": request.META["SERVER_PORT"],
-        }
-
-    request = HttpRequest()
-    request.META = request_meta
-    request.path = reverse(view_name, args=args)
-
-    if settings.USE_I18N:
-        request.LANGUAGE_CODE = settings.LANGUAGE_CODE
-
-    cache_key = get_cache_key(request, key_prefix=key_prefix)
-    if cache_key:
-        if cache_key in cache:
-            cache.delete(cache_key)
-            return True
-        else:
-            return False
-    else:
-        return False
