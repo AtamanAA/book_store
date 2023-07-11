@@ -146,6 +146,7 @@ class AuthorIdView(APIView):
                 {"Error": f"Author with id={author_id} not found"}, status=404
             )
 
+
 def expire_view_cache(request, view_name, args=None, key_prefix=None):
     if request.get_host() == "testserver":
         request_meta = {"SERVER_NAME": "127.0.0.1", "SERVER_PORT": "8000"}
