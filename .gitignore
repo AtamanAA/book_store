@@ -139,4 +139,4 @@ log/log_file.csv
 
 media/
 
-/postgres-data/
+postgres-data/
