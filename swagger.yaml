@@ -6,6 +6,7 @@ info:
   version: 1.0.3
 servers:
   - url: https://ataman-book-store-71ea28220527.herokuapp.com/api/v2
+  - url: http://127.0.0.1:8000/api/v2/
 tags:
   - name: books
     description: All books in store
@@ -86,6 +87,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error_400_book_post'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_Book_401'
+
   /books/{bookId}:
     get:
       tags:
@@ -150,6 +158,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error_400_book_put'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_Book_401'
         '404':
           description: Not found
           content:
@@ -179,6 +193,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Book_after_delete'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_Book_401'
         '404':
           description: Not found
           content:
@@ -243,6 +263,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error_400_author_post'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_Author_401'
   /authors/{authorId}:
     get:
       tags:
@@ -307,6 +333,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error_400_author_put'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_Author_401'
         '404':
           description: Not found
           content:
@@ -336,6 +368,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Author_after_delete'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_Author_401'
         '404':
           description: Not found
           content:
@@ -373,8 +411,8 @@ paths:
               $ref: '#/components/schemas/User_post_request_body'
         required: true
       responses:
-        '200':
-          description: Successful operation
+        '201':
+          description: Created
           content:
             application/json:
               schema:
@@ -449,6 +487,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error_400_user_put'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_401_user'
         '404':
           description: Not found
           content:
@@ -478,6 +522,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User_after_delete'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_401_user'
         '404':
           description: Not found
           content:
@@ -865,6 +915,12 @@ components:
           items:
             type: string
             example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
+    Error_Book_401:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Authentication credentials were not provided.
     Error_404_Book:
       type: object
       properties:
@@ -914,6 +970,12 @@ components:
           items:
             type: string
             example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
+    Error_Author_401:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Authentication credentials were not provided.
 
     Error_404_User:
       type: object
@@ -948,6 +1010,32 @@ components:
           items:
             type: string
             example: This password is too short. It must contain at least 8 characters.
+
+    Error_401_user:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Given token not valid for any token type
+        code:
+          type: string
+          example: token_not_valid
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              token_class:
+                type: string
+                example: AccessToken
+              token_type:
+                type: string
+                example: access
+              message:
+                type: string
+                example: Token is invalid or expired
+
+
 
     Error_400_token_post:
       type: object
