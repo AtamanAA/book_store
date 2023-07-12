@@ -3,7 +3,7 @@ info:
   title: Book store
   description: |-
     Book store with simple API
-  version: 1.0.2
+  version: 1.0.3
 servers:
   - url: https://ataman-book-store-71ea28220527.herokuapp.com/api/v2
 tags:
@@ -11,6 +11,10 @@ tags:
     description: All books in store
   - name: authors
     description: All books authors
+  - name: users
+    description: All users information
+  - name: token
+    description: JWT Authentication
 paths:
   /books/:
     get:
@@ -60,6 +64,8 @@ paths:
       summary: Add a new book to the store
       description: Add a new book to the store
       operationId: addBook
+      security:
+        - bearerAuth: []
       requestBody:
         description: Create a new book in the store
         content:
@@ -114,6 +120,8 @@ paths:
       summary: Update book by ID
       description: Update book in the store
       operationId: updateBook
+      security:
+        - bearerAuth: []
       parameters:
         - name: bookId
           in: path
@@ -154,6 +162,8 @@ paths:
       summary: Delete book by ID
       description: Delete book from the store
       operationId: deleteBook
+      security:
+        - bearerAuth: []
       parameters:
         - name: bookId
           in: path
@@ -211,6 +221,8 @@ paths:
       summary: Add a new author to the store
       description: Add a new author to the store
       operationId: addAuthor
+      security:
+        - bearerAuth: []
       requestBody:
         description: Create a new author in the store
         content:
@@ -265,6 +277,8 @@ paths:
       summary: Update author by ID
       description: Update author in the store
       operationId: updateAuthor
+      security:
+        - bearerAuth: []
       parameters:
         - name: authorId
           in: path
@@ -305,6 +319,8 @@ paths:
       summary: Delete author by ID
       description: Delete author from the store
       operationId: deleteAuthor
+      security:
+        - bearerAuth: []
       parameters:
         - name: authorId
           in: path
@@ -326,6 +342,217 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error_404_Author'
+
+  /users/:
+    get:
+      tags:
+        - users
+      summary: Show all users
+      description: Returns users list
+      operationId: getUsers
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    post:
+      tags:
+        - users
+      summary: Register new user
+      description: Register new user
+      operationId: addUser
+      requestBody:
+        description: Create new user
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User_post_request_body'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_400_user_post'
+  /users/{userId}:
+    get:
+      tags:
+        - users
+      summary: Find user by ID
+      description: Returns a single user
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_User'
+    put:
+      tags:
+        - users
+      summary: Update user by ID
+      description: Update user
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to put
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Update user
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User_put_request_body'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_after_update'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_400_user_put'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_User'
+    delete:
+      tags:
+        - users
+      summary: Delete user by ID
+      description: Delete user
+      operationId: deleteUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          description: ID of user to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User_after_delete'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_User'
+
+  /token/:
+    post:
+      tags:
+        - token
+      summary: Get access and refresh tokens
+      description: Get access and refresh tokens
+      operationId: getToken
+      requestBody:
+        description: Get access and refresh tokens
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token_post_request_body'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_400_token_post'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_401_token_post'
+
+  /token/refresh/:
+    post:
+      tags:
+        - token
+      summary: Get new access tokens
+      description: Get new access token
+      operationId: getAccessToken
+      requestBody:
+        description: Get new access token
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Refresh_Token_post_request_body'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refresh_Token'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_400_refresh_token_post'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_401_refresh_token_post'
+
 components:
   schemas:
     Book:
@@ -426,6 +653,7 @@ components:
         Success:
           type: string
           example: Book with id=10 success delete
+
     Author:
       type: object
       properties:
@@ -505,6 +733,86 @@ components:
           type: string
           example: Author with id=10 success delete
 
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        username:
+          type: string
+          example: Firstuser
+
+    User_post_request_body:
+      type: object
+      properties:
+        username:
+          type: string
+          example: Newuser
+        password:
+          type: string
+          example: qwerty123!
+    User_put_request_body:
+      type: object
+      properties:
+        username:
+          type: string
+          example: Update username
+        password:
+          type: string
+          example: Update password
+    User_after_update:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        username:
+          type: string
+          example: Update username
+    User_after_delete:
+      type: object
+      properties:
+        Success:
+          type: string
+          example: User with id=10 success delete
+
+    Token:
+      type: object
+      properties:
+        refresh:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY4OTI0ODI1MCwiaWF0IjoxNjg5MTYxODUwLCJqdGkiOiI2MTYwNzI2Nzk5Y2E0ZWIwOGQ0M2Y4YjNjMjA0Y2VkMCIsInVzZXJfaWQiOjF9.l7Kq7IG5g-HnN5swm6p2qf98G0Mrd4L42-STpiqQ5cQ
+        access:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5MTYyMTUwLCJpYXQiOjE2ODkxNjE4NTAsImp0aSI6IjAxNTBlZGM2NTkyODRjYzU5MTM3ZTA2OWUzZWY4OGE2IiwidXNlcl9pZCI6MX0.srLgZcQCPnb3jLbbVoNcx6jtT5MGm8jCMPs9U8fxKds
+
+    Token_post_request_body:
+      type: object
+      properties:
+        username:
+          type: string
+          example: FirstUser
+        password:
+          type: string
+          example: qwerty123!
+
+    Refresh_Token:
+      type: object
+      properties:
+        access:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5MTYyMTUwLCJpYXQiOjE2ODkxNjE4NTAsImp0aSI6IjAxNTBlZGM2NTkyODRjYzU5MTM3ZTA2OWUzZWY4OGE2IiwidXNlcl9pZCI6MX0.srLgZcQCPnb3jLbbVoNcx6jtT5MGm8jCMPs9U8fxKds
+
+    Refresh_Token_post_request_body:
+      type: object
+      properties:
+        refresh:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY4OTI0ODk2NiwiaWF0IjoxNjg5MTYyNTY2LCJqdGkiOiIxNDVmYTc1ZjI0N2U0MGFmYTU1MjZkZmMzMjA1MTk0NCIsInVzZXJfaWQiOjF9.BL00mXFcWX5pO_tlszbB78e-HJcAQ9RTuEDMsbpoJeM
+
     Error_400_get:
       type: object
       properties:
@@ -563,6 +871,7 @@ components:
         Error:
           type: string
           example: Book with id=100 not found
+
     Error_404_Author:
       type: object
       properties:
@@ -605,3 +914,88 @@ components:
           items:
             type: string
             example: 'Date has wrong format. Use one of these formats instead: YYYY-MM-DD.'
+
+    Error_404_User:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Not found.
+    Error_400_user_post:
+      type: object
+      properties:
+        username:
+          type: array
+          items:
+            type: string
+            example: A user with that username already exists.
+        password:
+          type: array
+          items:
+            type: string
+            example: This password is too short. It must contain at least 8 characters.
+
+    Error_400_user_put:
+      type: object
+      properties:
+        username:
+          type: array
+          items:
+            type: string
+            example: A user with that username already exists.
+        password:
+          type: array
+          items:
+            type: string
+            example: This password is too short. It must contain at least 8 characters.
+
+    Error_400_token_post:
+      type: object
+      properties:
+        username:
+          type: array
+          items:
+            type: string
+            example: This field is required.
+        password:
+          type: array
+          items:
+            type: string
+            example: This field is required.
+    Error_401_token_post:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            type: string
+            example: No active account found with the given credentials
+
+    Error_400_refresh_token_post:
+      type: object
+      properties:
+        refresh:
+          type: array
+          items:
+            type: string
+            example: This field is required.
+
+    Error_401_refresh_token_post:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            type: string
+            example: Token is invalid or expired
+        code:
+          type: array
+          items:
+            type: string
+            example: token_not_valid
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
