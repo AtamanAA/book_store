@@ -806,4 +806,3 @@ def test_users_not_found_id_delete(api_client):
 def test_users_id_delete(api_client_is_staff):
     response = api_client_is_staff.delete("/api/v2/users/3/")
     assert response.status_code == 204
-
