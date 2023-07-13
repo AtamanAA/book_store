@@ -8,6 +8,7 @@ BASE_URL = os.getenv(
 )
 
 test_id = {}
+test_token = {}
 
 
 def test_books_get():
@@ -20,6 +21,31 @@ def test_authors_get():
     assert r.status_code == 200
 
 
+def test_users_post_valid():
+    body = {
+        "username": "test_user_5",
+        "password": "random1!",
+    }
+    r = requests.post(BASE_URL + "users/", json=body)
+    response_body = r.json()
+    test_id["test_user_id"] = response_body["id"]
+    assert r.status_code == 201
+
+
+
+def test_users_get_token_valid():
+    body = {
+        "username": "test_user",
+        "password": "random1!",
+    }
+    r = requests.post(BASE_URL + "token/", json=body)
+    response_body = r.json()
+    test_token["refresh"] = response_body["refresh"]
+    test_token["access"] = response_body["access"]
+    test_token["token_header"] = {"Authorization": "Bearer " + test_token["access"]}
+    assert r.status_code == 200
+
+
 def test_authors_post_valid():
     body = {
         "first_name": "test_first_name",
@@ -27,7 +53,7 @@ def test_authors_post_valid():
         "patronymic": "test-patronymic",
         "birthday": "1970-05-20",
     }
-    r = requests.post(BASE_URL + "authors/", json=body)
+    r = requests.post(BASE_URL + "authors/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     test_id["test_author_id"] = response_body["id"]
     assert r.status_code == 200
@@ -35,7 +61,7 @@ def test_authors_post_valid():
 
 def test_authors_post_empty_json():
     body = {}
-    r = requests.post(BASE_URL + "authors/", json=body)
+    r = requests.post(BASE_URL + "authors/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {
         "first_name": ["This field is required."],
@@ -54,7 +80,7 @@ def test_authors_post_long_first_name():
         "patronymic": "test-patronymic",
         "birthday": "1970-05-20",
     }
-    r = requests.post(BASE_URL + "authors/", json=body)
+    r = requests.post(BASE_URL + "authors/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {
         "first_name": ["Ensure this field has no more than 20 characters."]
@@ -71,7 +97,7 @@ def test_authors_post_long_last_name():
         "patronymic": "test-patronymic",
         "birthday": "1970-05-20",
     }
-    r = requests.post(BASE_URL + "authors/", json=body)
+    r = requests.post(BASE_URL + "authors/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {
         "last_name": ["Ensure this field has no more than 20 characters."]
@@ -87,7 +113,7 @@ def test_authors_post_invalid_data():
         "patronymic": "test-patronymic",
         "birthday": "1970",
     }
-    r = requests.post(BASE_URL + "authors/", json=body)
+    r = requests.post(BASE_URL + "authors/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {
         "birthday": [
@@ -106,7 +132,7 @@ def test_books_post_valid():
         "genre": "test_genre",
         "publication_date": "2023-05-20",
     }
-    r = requests.post(BASE_URL + "books/", json=body)
+    r = requests.post(BASE_URL + "books/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     test_id["test_book_id"] = response_body["id"]
     assert r.status_code == 200
@@ -114,7 +140,7 @@ def test_books_post_valid():
 
 def test_books_post_empty_json():
     body = {}
-    r = requests.post(BASE_URL + "books/", json=body)
+    r = requests.post(BASE_URL + "books/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {
         "name": ["This field is required."],
@@ -134,7 +160,7 @@ def test_books_post_long_name():
         "genre": "test_genre",
         "publication_date": "2023-05-20",
     }
-    r = requests.post(BASE_URL + "books/", json=body)
+    r = requests.post(BASE_URL + "books/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {"name": ["Ensure this field has no more than 128 characters."]}
     assert r.status_code == 400
@@ -150,7 +176,7 @@ def test_books_post_long_genre():
         "genre": long_genre,
         "publication_date": "2023-05-20",
     }
-    r = requests.post(BASE_URL + "books/", json=body)
+    r = requests.post(BASE_URL + "books/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {"genre": ["Ensure this field has no more than 40 characters."]}
     assert r.status_code == 400
@@ -164,7 +190,7 @@ def test_books_post_invalid_author_type():
         "genre": "test_genre",
         "publication_date": "2023-05-20",
     }
-    r = requests.post(BASE_URL + "books/", json=body)
+    r = requests.post(BASE_URL + "books/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {"authors": ['Expected a list of items but got type "str".']}
     assert r.status_code == 400
@@ -179,7 +205,7 @@ def test_books_post_invalid_data():
         "genre": "test_genre",
         "publication_date": "2023",
     }
-    r = requests.post(BASE_URL + "books/", json=body)
+    r = requests.post(BASE_URL + "books/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {
         "publication_date": [
@@ -198,7 +224,7 @@ def test_books_post_invalid_author_not_found():
         "genre": "test_genre",
         "publication_date": "2023-05-20",
     }
-    r = requests.post(BASE_URL + "books/", json=body)
+    r = requests.post(BASE_URL + "books/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {
         "authors": [f'Invalid pk "{author_id}" - object does not exist.']
@@ -213,7 +239,7 @@ def test_books_put_valid():
         "name": "update_test_book",
         "genre": "update_test_genre",
     }
-    r = requests.put(BASE_URL + f"books/{book_id}/", json=body)
+    r = requests.put(BASE_URL + f"books/{book_id}/", json=body, headers=test_token["token_header"])
     assert r.status_code == 200
 
 
@@ -223,7 +249,7 @@ def test_books_id_put_invalid_id():
         "name": "update_test_book",
         "genre": "update_test_genre",
     }
-    r = requests.put(BASE_URL + f"books/{book_id}/", json=body)
+    r = requests.put(BASE_URL + f"books/{book_id}/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {"Error": f"Book with id={book_id} not found"}
     assert r.status_code == 404
@@ -232,9 +258,9 @@ def test_books_id_put_invalid_id():
 
 def test_books_delete():
     book_id = test_id["test_book_id"]
-    r = requests.delete(BASE_URL + f"books/{book_id}/")
+    r = requests.delete(BASE_URL + f"books/{book_id}/", headers=test_token["token_header"])
     assert r.status_code == 200
-    r = requests.delete(BASE_URL + f"books/{book_id}/")
+    r = requests.delete(BASE_URL + f"books/{book_id}/", headers=test_token["token_header"])
     assert r.status_code == 404
 
 
@@ -244,7 +270,7 @@ def test_authors_put_valid():
         "first_name": "update_first_name",
         "last_name": "update_last_name",
     }
-    r = requests.put(BASE_URL + f"authors/{author_id}/", json=body)
+    r = requests.put(BASE_URL + f"authors/{author_id}/", json=body, headers=test_token["token_header"])
     assert r.status_code == 200
 
 
@@ -254,7 +280,7 @@ def test_authors_id_put_invalid_id():
         "first_name": "update_first_name",
         "last_name": "update_last_name",
     }
-    r = requests.put(BASE_URL + f"authors/{author_id}/", json=body)
+    r = requests.put(BASE_URL + f"authors/{author_id}/", json=body, headers=test_token["token_header"])
     response_body = r.json()
     expected_response = {"Error": f"Author with id={author_id} not found"}
     assert r.status_code == 404
@@ -263,9 +289,9 @@ def test_authors_id_put_invalid_id():
 
 def test_authors_delete():
     author_id = test_id["test_author_id"]
-    r = requests.delete(BASE_URL + f"authors/{author_id}/")
+    r = requests.delete(BASE_URL + f"authors/{author_id}/", headers=test_token["token_header"])
     assert r.status_code == 200
-    r = requests.delete(BASE_URL + f"authors/{author_id}/")
+    r = requests.delete(BASE_URL + f"authors/{author_id}/", headers=test_token["token_header"])
     assert r.status_code == 404
 
 
@@ -309,3 +335,14 @@ def test_authors_id_invalid_get():
     expected_response = {"Error": f"Author with id={author_id} not found"}
     assert r.status_code == 404
     assert response_body == expected_response
+
+
+
+
+
+
+
+# def test_users_delete_valid():
+#     user_id = test_id["test_user_id"]
+#     r = requests.delete(BASE_URL + f"users/{user_id}/", headers=test_token["token_header"])
+#     assert r.status_code == 204
