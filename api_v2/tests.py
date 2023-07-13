@@ -2,9 +2,8 @@ import json
 import pathlib
 
 import pytest
-from django.core.management import call_command
 from django.contrib.auth.models import User
-from django.test import Client
+from django.core.management import call_command
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -638,3 +637,167 @@ def test_authors_id_delete_invalid_id(api_client):
     expected_response = {"Error": f"Author with id=10 not found"}
     assert response.status_code == 404
     assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_get(api_client):
+    response = api_client.get("/api/v2/users/")
+    response_body = response.json()
+    expected_response = json.load(open(root / "fixtures/users_get_response.json"))
+    assert response.status_code == 200
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_post_valid(api_client):
+    body = {"username": "test_user_4", "password": "random4!"}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/users/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {
+        "id": 4,
+        "username": "test_user_4",
+    }
+    assert response.status_code == 201
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_post_empty_json(api_client):
+    body = {}
+    response = api_client.post(
+        "/api/v2/users/",
+        data=body,
+    )
+    response_body = response.json()
+    expected_response = {
+        "username": ["This field is required."],
+        "password": ["This field is required."],
+    }
+    assert response.status_code == 400
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_post_short_password(api_client):
+    body = {"username": "test_user_4", "password": "ran"}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/users/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {
+        "password": [
+            "['This password is too short. It must contain at least 8 characters.']"
+        ]
+    }
+    assert response.status_code == 400
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_post_same_username(api_client):
+    body = {"username": "test_user_2", "password": "random4!"}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/users/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {"username": ["A user with that username already exists."]}
+    assert response.status_code == 400
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_id_valid_get(api_client):
+    response = api_client.get("/api/v2/users/1/")
+    response_body = response.json()
+    expected_response = json.load(open(root / "fixtures/users_id_get_response.json"))
+    assert response.status_code == 200
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_id_invalid_get(api_client):
+    response = api_client.get("/api/v2/users/10/")
+    response_body = response.json()
+    expected_response = {"detail": "Not found."}
+    assert response.status_code == 404
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_id_put_valid(api_client):
+    body = {"username": "update_test", "password": "new_password_3!"}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.put(
+        "/api/v2/users/3/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {"id": 3, "username": "update_test"}
+    assert response.status_code == 200
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_id_put_shot_password(api_client):
+    body = {"username": "update_test", "password": "nr"}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.put(
+        "/api/v2/users/3/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {
+        "password": [
+            "['This password is too short. It must contain at least 8 characters.']"
+        ]
+    }
+    assert response.status_code == 400
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_id_put_another_user(api_client):
+    body = {"username": "update_test", "password": "new_password"}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.put(
+        "/api/v2/users/1/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {"detail": "You do not have permission to perform this action."}
+    assert response.status_code == 403
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_id_put_not_found(api_client):
+    body = {"username": "update_test", "password": "new_password"}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.put(
+        "/api/v2/users/10/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {"detail": "Not found."}
+    assert response.status_code == 404
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_users_not_found_id_delete(api_client):
+    response = api_client.delete("/api/v2/users/10/")
+    response_body = response.json()
+    expected_response = {"detail": "Not found."}
+    assert response.status_code == 404
+    assert response_body == expected_response
+
+
+# @pytest.mark.django_db
+# def test_users_id_delete(api_client, mocker):
+#     mocker.patch('rest_framework.permissions.BasePermission.has_permission', return_value=True)
+#     response = api_client.delete("/api/v2/users/3/")
+#     response_body = response.json()
+#     expected_response = {"Success": "User with id=3 success delete"}
+#     assert response.status_code == 200
+#     assert response_body == expected_response

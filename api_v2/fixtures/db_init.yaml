@@ -54,7 +54,7 @@
     first_name: ""
     last_name: ""
     email: ""
-    is_staff: false
+    is_staff: true
     is_active: true
     date_joined: "2023-07-12T15:31:38.648Z"
     groups: []
@@ -74,3 +74,4 @@
     date_joined: "2023-07-12T15:31:54.012Z"
     groups: []
     user_permissions: []
+
