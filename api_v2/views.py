@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.http import HttpRequest
 from django.http import JsonResponse
@@ -6,14 +7,21 @@ from django.urls import reverse
 from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
 
 from author.models import Author
 from book.models import Book
-from .serializers import AuthorSerializer, BookSerializer
+from .permissions import UserPermissions
+from .serializers import AuthorSerializer, BookSerializer, UserSerializer
 
 
 class BookView(APIView):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+
     @method_decorator(cache_page(60 * 5))
     def get(self, request):
         try:
@@ -45,6 +53,10 @@ class BookView(APIView):
 
 
 class BookIdView(APIView):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+
     def get(self, request, book_id):
         try:
             book = Book.objects.get(id=book_id)
@@ -83,6 +95,10 @@ class BookIdView(APIView):
 
 
 class AuthorView(APIView):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+
     @method_decorator(cache_page(60 * 5))
     def get(self, request):
         optional_parameters = ["first_name"]
@@ -109,6 +125,10 @@ class AuthorView(APIView):
 
 
 class AuthorIdView(APIView):
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+
     def get(self, request, author_id):
         try:
             author = Author.objects.get(id=author_id)
@@ -172,3 +192,11 @@ def expire_view_cache(request, view_name, args=None, key_prefix=None):
             return False
     else:
         return False
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    permission_classes = [
+        UserPermissions,
+    ]
+    serializer_class = UserSerializer
+    queryset = User.objects.all()

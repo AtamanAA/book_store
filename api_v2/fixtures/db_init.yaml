@@ -44,4 +44,34 @@
       - 3
     genre: g1
     publication_date: 1990-01-01
+- model: auth.user
+  pk: 1
+  fields:
+    password: "pbkdf2_sha256$600000$TaueHREO6BgTUKPHutPw5Z$MA2EgkU6Bz0Fu/gfe+CxeogFLYykMHMdJHELAj7WqdQ="
+    last_login: null
+    is_superuser: false
+    username: "test_user_1"
+    first_name: ""
+    last_name: ""
+    email: ""
+    is_staff: true
+    is_active: true
+    date_joined: "2023-07-12T15:31:38.648Z"
+    groups: []
+    user_permissions: []
+- model: auth.user
+  pk: 2
+  fields:
+    password: "pbkdf2_sha256$600000$JMVu4FyVH3CWk4hHdOw47s$olyNmLjvfTdHmnO8HG0q2S6LxhTqGdGfRSv3+aobXs0="
+    last_login: null
+    is_superuser: false
+    username: "test_user_2"
+    first_name: ""
+    last_name: ""
+    email: ""
+    is_staff: false
+    is_active: true
+    date_joined: "2023-07-12T15:31:54.012Z"
+    groups: []
+    user_permissions: []
 

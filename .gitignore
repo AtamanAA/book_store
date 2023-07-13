@@ -138,4 +138,5 @@ dmypy.json
 log/log_file.csv
 
 media/
+
 postgres-data/
