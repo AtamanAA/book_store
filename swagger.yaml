@@ -522,12 +522,8 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User_after_delete'
+        '204':
+          description: No content
         '401':
           description: Unauthorized
           content:
@@ -828,12 +824,6 @@ components:
         username:
           type: string
           example: Update username
-    User_after_delete:
-      type: object
-      properties:
-        Success:
-          type: string
-          example: User with id=10 success delete
 
     Token:
       type: object

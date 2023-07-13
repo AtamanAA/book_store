@@ -25,6 +25,15 @@ def api_client():
     return client
 
 
+@pytest.fixture
+def api_client_is_staff():
+    user = User.objects.create_user(username="test", password="test", is_staff="True")
+    client = APIClient()
+    refresh = RefreshToken.for_user(user)
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {refresh.access_token}")
+    return client
+
+
 @pytest.mark.django_db
 def test_books_get(api_client):
     response = api_client.get("/api/v2/books/")
@@ -793,11 +802,8 @@ def test_users_not_found_id_delete(api_client):
     assert response_body == expected_response
 
 
-# @pytest.mark.django_db
-# def test_users_id_delete(api_client, mocker):
-#     mocker.patch('rest_framework.permissions.BasePermission.has_permission', return_value=True)
-#     response = api_client.delete("/api/v2/users/3/")
-#     response_body = response.json()
-#     expected_response = {"Success": "User with id=3 success delete"}
-#     assert response.status_code == 200
-#     assert response_body == expected_response
+@pytest.mark.django_db
+def test_users_id_delete(api_client_is_staff):
+    response = api_client_is_staff.delete("/api/v2/users/3/")
+    assert response.status_code == 204
+
