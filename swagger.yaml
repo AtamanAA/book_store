@@ -498,7 +498,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error_403_user_put'
+                $ref: '#/components/schemas/Error_403_user'
         '404':
           description: Not found
           content:
@@ -530,6 +530,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error_401_user'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_403_user'
         '404':
           description: Not found
           content:
@@ -1031,12 +1037,13 @@ components:
                 type: string
                 example: Token is invalid or expired
 
-    Error_403_user_put:
+    Error_403_user:
       type: object
       properties:
         detail:
           type: string
           example: You do not have permission to perform this action.
+
 
 
     Error_400_token_post:
