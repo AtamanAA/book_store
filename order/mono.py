@@ -5,8 +5,6 @@ import ecdsa
 import requests
 from django.conf import settings
 
-from order.models import Order, OrderItem
-
 
 def verify_signature(pub_key_base64, x_sign_base64, body_bytes):
     try:
@@ -25,3 +23,33 @@ def verify_signature(pub_key_base64, x_sign_base64, body_bytes):
         return True
     else:
         return False
+
+
+def create_mono_order(order, webhook_url):
+    body = {
+        "amount": order.full_price,
+        "merchantPaymInfo": {
+            "reference": str(order.id),
+            "basketOrder": order.get_mono_basket_info(),
+        },
+        "webHookUrl": webhook_url,
+    }
+    r = requests.post(
+        "https://api.monobank.ua/api/merchant/invoice/create",
+        headers={"X-Token": settings.MONOBANK_API_KEY},
+        json=body,
+    )
+    r.raise_for_status()
+    order.invoice_id = r.json()["invoiceId"]
+    order.save()
+    url = r.json()["pageUrl"]
+
+    return {"order_id": order.id, "pageUrl": url}
+
+
+def get_mono_token():
+    key = requests.get(
+        "https://api.monobank.ua/api/merchant/pubkey",
+        headers={"X-Token": settings.MONOBANK_API_KEY},
+    ).json()["key"]
+    return key

@@ -1,4 +1,3 @@
-import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -8,15 +7,12 @@ from django.urls import reverse
 from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from rest_framework import viewsets, mixins
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.views import APIView
 from rest_framework import permissions
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from author.models import Author
-from book.models import Book
-from order.models import Order, OrderItem, MonoSettings
 from .permissions import UserPermissions
 from .serializers import (
     AuthorSerializer,
@@ -25,7 +21,10 @@ from .serializers import (
     OrderSerializer,
     MonoCallbackSerializer,
 )
-from order.mono import verify_signature
+from author.models import Author
+from book.models import Book
+from order.models import Order, OrderItem
+from order.mono import verify_signature, create_mono_order, get_mono_token
 
 
 class BookView(APIView):
@@ -246,28 +245,9 @@ class OrderView(APIView):
                 order_item = OrderItem(order=order, book=book, quantity=quantity)
                 order_item.save()
 
-            webhook_url = request.build_absolute_uri(reverse("mono_callback"))
-            # webhook_url = "https://webhook.site/8690a212-49cf-46d4-a57e-5f3cf9c1af91"
-
-            body = {
-                "amount": order.full_price,
-                "merchantPaymInfo": {
-                    "reference": str(order.id),
-                    "basketOrder": order.get_mono_basket_info(),
-                },
-                "webHookUrl": webhook_url,
-            }
-            r = requests.post(
-                "https://api.monobank.ua/api/merchant/invoice/create",
-                headers={"X-Token": settings.MONOBANK_API_KEY},
-                json=body,
-            )
-            r.raise_for_status()
-            order.invoice_id = r.json()["invoiceId"]
-            order.save()
-            url = r.json()["pageUrl"]
-
-            response = {"order_id": order.id, "pageUrl": url}
+            # webhook_url = request.build_absolute_uri(reverse("mono_callback"))
+            webhook_url = "https://webhook.site/8690a212-49cf-46d4-a57e-5f3cf9c1af91"
+            response = create_mono_order(order, webhook_url)
             return Response(response)
 
         return JsonResponse(serializer.errors, status=400)
@@ -277,7 +257,7 @@ class OrderCallbackView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        public_key = MonoSettings.get_token()
+        public_key = get_mono_token()
         if not verify_signature(
             public_key, request.headers.get("X-Sign"), request.body
         ):
@@ -290,8 +270,12 @@ class OrderCallbackView(APIView):
             return Response({"status": "order not found"}, status=404)
         if order.invoice_id != callback.validated_data["invoiceId"]:
             return Response({"status": "invoiceId mismatch"}, status=400)
-        order.status = callback.validated_data["status"]
+        callback_status = callback.validated_data["status"]
+        if callback_status == "success" and order.status != "success":
+            for item in OrderItem.objects.filter(order_id=order.id):
+                book = Book.objects.get(pk=item.book_id)
+                book.count -= 1
+                book.save()
+        order.status = callback_status
         order.save()
         return Response({"status": "ok"})
-
-
