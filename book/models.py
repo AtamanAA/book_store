@@ -9,6 +9,8 @@ class Book(models.Model):
     authors = models.ManyToManyField(Author, null=True, related_name="book")
     genre = models.CharField(max_length=40)
     publication_date = models.DateField()
+    price = models.PositiveIntegerField(default=1000)
+    count = models.IntegerField(default=0)
 
     # @staticmethod
     def get_info(self):
