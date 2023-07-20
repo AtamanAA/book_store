@@ -27,6 +27,8 @@
       - 1
     genre: g1
     publication_date: 1990-01-01
+    count: 10
+    price: 10000
 - model: book.book
   pk: 2
   fields:
@@ -36,6 +38,8 @@
       - 2
     genre: g2
     publication_date: 1990-01-01
+    count: 20
+    price: 20000
 - model: book.book
   pk: 3
   fields:
@@ -44,4 +48,7 @@
       - 3
     genre: g1
     publication_date: 1990-01-01
+    count: 0
+    price: 5000
+
 

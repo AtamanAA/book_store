@@ -3,6 +3,7 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.db import models
 
+
 from book.models import Book
 
 
@@ -10,7 +11,7 @@ class Order(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     books = models.ManyToManyField(Book, through="OrderItem")
     status = models.CharField(max_length=128)
-    created_at = models.DateTimeField(default=datetime.now())
+    created_at = models.DateTimeField(blank=True)
     invoice_id = models.CharField(max_length=200, null=True)
 
     @property
@@ -35,6 +36,7 @@ class Order(models.Model):
             "status": self.status,
             "full_price": self.full_price,
             "created_at": self.created_at,
+            "invoice_id": self.invoice_id,
         }
         return book_info
 
@@ -56,4 +58,4 @@ class Order(models.Model):
 class OrderItem(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    quantity = models.IntegerField(null=True)

@@ -21,5 +21,7 @@ class Book(models.Model):
             "authors": authors,
             "genre": self.genre,
             "publication_date": self.publication_date,
+            "count": self.count,
+            "price": self.price,
         }
         return book_info

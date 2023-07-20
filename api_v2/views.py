@@ -4,6 +4,7 @@ from django.core.cache import cache
 from django.http import HttpRequest
 from django.http import JsonResponse
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -12,6 +13,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
 
 from .permissions import UserPermissions
 from .serializers import (
@@ -212,20 +214,6 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
 
 
-class OrderViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.AllowAny]
-    serializer_class = OrderSerializer
-    queryset = Order.objects.all().order_by("-id")
-
-    def create(self, request, *args, **kwargs):
-        order = OrderSerializer(data=request.data)
-        order.is_valid(raise_exception=True)
-        # webhook_url = request.build_absolute_uri(reverse("mono_callback"))
-        webhook_url = "url for pay"
-        order_data = create_order(order.validated_data, webhook_url)
-        return Response(order_data)
-
-
 class OrderView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -236,16 +224,38 @@ class OrderView(APIView):
     def post(self, request):
         serializer = OrderSerializer(data=request.data)
         if serializer.is_valid():
-            order = Order(user=request.user, status="created")
+            order = Order(
+                user=request.user, status="created", created_at=timezone.now()
+            )
             order.save()
 
             for row in serializer.data["books"]:
-                book = Book.objects.get(pk=row["book_id"])
+                book_id = row["book_id"]
+                try:
+                    book = Book.objects.get(pk=book_id)
+                except Book.DoesNotExist:
+                    return Response(
+                        {"Error": f"Book with id {book_id} not found"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
                 quantity = row["quantity"]
-                order_item = OrderItem(order=order, book=book, quantity=quantity)
-                order_item.save()
+                if book.count < quantity:
+                    return Response(
+                        {
+                            "Error": f"There are not enough books with id {book_id} in stock to create an order"
+                        },
+                        status=status.HTTP_406_NOT_ACCEPTABLE,
+                    )
+                if quantity > 0:
+                    order_item = OrderItem(order=order, book=book, quantity=quantity)
+                    order_item.save()
+                else:
+                    return Response(
+                        {"Error": "Quantity must be more that 0"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
-            # webhook_url = request.build_absolute_uri(reverse("mono_callback"))
+                # webhook_url = request.build_absolute_uri(reverse("mono_callback"))
             webhook_url = "https://webhook.site/8690a212-49cf-46d4-a57e-5f3cf9c1af91"
             response = create_mono_order(order, webhook_url)
             return Response(response)

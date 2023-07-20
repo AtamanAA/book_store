@@ -95,6 +95,8 @@ def test_books_post_valid():
         "authors": ["a_fn1 l1 p1"],
         "genre": "g2",
         "publication_date": "2023-05-20",
+        "count": 0,
+        "price": 1000,
     }
     assert response.status_code == 200
     assert response_body == expected_response
@@ -255,6 +257,8 @@ def test_books_id_put_all_field():
         "authors": ["a_fn2 l3 p3"],
         "genre": "new_genre",
         "publication_date": "2011-05-20",
+        "count": 10,
+        "price": 10000,
     }
     assert response.status_code == 200
     assert response_body == expected_response
@@ -279,6 +283,8 @@ def test_books_id_put_some_field():
         "authors": ["a_fn2 l3 p3"],
         "genre": "new_genre",
         "publication_date": "1990-01-01",
+        "count": 10,
+        "price": 10000,
     }
     assert response.status_code == 200
     assert response_body == expected_response
