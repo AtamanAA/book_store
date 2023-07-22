@@ -5,6 +5,9 @@ import ecdsa
 import requests
 from django.conf import settings
 
+from book.models import Book
+from .models import OrderItem
+
 
 def verify_signature(pub_key_base64, x_sign_base64, body_bytes):
     try:
@@ -30,7 +33,7 @@ def create_mono_order(order, webhook_url):
         "amount": order.full_price,
         "merchantPaymInfo": {
             "reference": str(order.id),
-            "basketOrder": order.get_mono_basket_info(),
+            "basketOrder": fill_mono_basket(order.id),
         },
         "webHookUrl": webhook_url,
     }
@@ -40,11 +43,26 @@ def create_mono_order(order, webhook_url):
         json=body,
     )
     r.raise_for_status()
+    url = r.json()["pageUrl"]
+    order.pay_url = url
     order.invoice_id = r.json()["invoiceId"]
     order.save()
-    url = r.json()["pageUrl"]
-
     return {"order_id": order.id, "pageUrl": url}
+
+
+def fill_mono_basket(order_id):
+    basket = []
+    for item in OrderItem.objects.filter(order_id=order_id):
+        book = Book.objects.get(pk=item.book_id)
+        basket.append(
+            {
+                "name": book.name,
+                "qty": item.quantity,
+                "sum": book.price * item.quantity,
+                "unit": "шт.",
+            }
+        )
+    return basket
 
 
 def get_mono_token():

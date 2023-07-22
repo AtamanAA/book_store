@@ -8,6 +8,7 @@
     "status": "created",
     "created_at": "2023-07-20T22:06:20.046333Z",
     "invoice_id": "230719CWUB73pSvT9C6X",
-    "full_price": 10000
+    "full_price": 10000,
+    "pay_url": "https://pay.mbnk.biz/230722AuUfq8uZGGbYWj"
   }
 ]

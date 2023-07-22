@@ -13,6 +13,7 @@ class Order(models.Model):
     status = models.CharField(max_length=128)
     created_at = models.DateTimeField(blank=True)
     invoice_id = models.CharField(max_length=200, null=True)
+    pay_url = models.CharField(max_length=500, null=True)
 
     @property
     def full_price(self):
@@ -29,7 +30,7 @@ class Order(models.Model):
                 {"book_id": book.id, "book_name": book.name, "quantity": item.quantity}
             )
 
-        book_info = {
+        order_info = {
             "id": self.id,
             "user_id": self.user.id,
             "books": books,
@@ -37,22 +38,9 @@ class Order(models.Model):
             "full_price": self.full_price,
             "created_at": self.created_at,
             "invoice_id": self.invoice_id,
+            "pay_url": self.pay_url,
         }
-        return book_info
-
-    def get_mono_basket_info(self):
-        basket = []
-        for item in OrderItem.objects.filter(order_id=self.id):
-            book = Book.objects.get(pk=item.book_id)
-            basket.append(
-                {
-                    "name": book.name,
-                    "qty": item.quantity,
-                    "sum": book.price * item.quantity,
-                    "unit": "шт.",
-                }
-            )
-        return basket
+        return order_info
 
 
 class OrderItem(models.Model):

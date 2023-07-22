@@ -914,3 +914,39 @@ def test_orders_post_empty_json(api_client):
     expected_response = {"books": ["This field is required."]}
     assert response.status_code == 400
     assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_id_get(api_client):
+    response = api_client.get("/api/v2/orders/1/")
+    response_body = response.json()
+    expected_response = json.load(open(root / "fixtures/orders_id_get_response.json"))
+    assert response.status_code == 200
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_id_invalid_get(api_client):
+    response = api_client.get("/api/v2/orders/10/")
+    response_body = response.json()
+    expected_response = {"Error": "Order with id=10 not found"}
+    assert response.status_code == 404
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_id_delete(api_client_is_staff):
+    response = api_client_is_staff.delete("/api/v2/orders/1/")
+    response_body = response.json()
+    expected_response = {"Success": "Order with id=1 success delete"}
+    assert response.status_code == 200
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_id_delete_invalid_id(api_client_is_staff):
+    response = api_client_is_staff.delete("/api/v2/orders/10/")
+    response_body = response.json()
+    expected_response = {"Error": f"Order with id=10 not found"}
+    assert response.status_code == 404
+    assert response_body == expected_response

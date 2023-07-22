@@ -14,6 +14,7 @@ from .views import (
     AuthorIdView,
     UserViewSet,
     OrderView,
+    OrderIdView,
     OrderCallbackView,
 )
 
@@ -31,5 +32,6 @@ urlpatterns = [
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("", include(router.urls)),
     path("orders/", csrf_exempt(OrderView.as_view()), name="all_orders"),
+    path("orders/<int:order_id>/", csrf_exempt(OrderIdView.as_view())),
     path("monobank/callback", OrderCallbackView.as_view(), name="mono_callback"),
 ]

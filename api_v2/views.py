@@ -8,14 +8,13 @@ from django.utils import timezone
 from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-from rest_framework import permissions
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 
-from .permissions import UserPermissions
+from .permissions import UserPermissions, OrderPermissions
 from .serializers import (
     AuthorSerializer,
     BookSerializer,
@@ -215,7 +214,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class OrderView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request):
         orders = [order.get_info() for order in Order.objects.all().order_by("-id")]
@@ -255,16 +254,40 @@ class OrderView(APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
-                # webhook_url = request.build_absolute_uri(reverse("mono_callback"))
-            webhook_url = "https://webhook.site/8690a212-49cf-46d4-a57e-5f3cf9c1af91"
+            webhook_url = request.build_absolute_uri(reverse("mono_callback"))
             response = create_mono_order(order, webhook_url)
             return Response(response)
 
         return JsonResponse(serializer.errors, status=400)
 
 
+class OrderIdView(APIView):
+    permission_classes = [OrderPermissions]
+
+    def get(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id)
+            return JsonResponse(order.get_info(), safe=False)
+        except Order.DoesNotExist:
+            return JsonResponse(
+                {"Error": f"Order with id={order_id} not found"}, status=404
+            )
+
+    def delete(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id)
+            order.delete()
+            return JsonResponse(
+                {"Success": f"Order with id={order_id} success delete"}, status=200
+            )
+        except Order.DoesNotExist:
+            return JsonResponse(
+                {"Error": f"Order with id={order_id} not found"}, status=404
+            )
+
+
 class OrderCallbackView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [OrderPermissions]
 
     def post(self, request):
         public_key = get_mono_token()
