@@ -97,6 +97,8 @@ def test_books_post_valid_new(api_client):
         "authors": ["1"],
         "genre": "g2",
         "publication_date": "2023-05-20",
+        "count": 10,
+        "price": 10000,
     }
     json_body = json.dumps(body, indent=4)
     response = api_client.post(
@@ -109,6 +111,8 @@ def test_books_post_valid_new(api_client):
         "authors": ["a_fn1 l1 p1"],
         "genre": "g2",
         "publication_date": "2023-05-20",
+        "count": 10,
+        "price": 10000,
     }
     assert response.status_code == 200
     assert response_body == expected_response
@@ -247,6 +251,8 @@ def test_books_id_put_all_field(api_client):
         "authors": ["a_fn2 l3 p3"],
         "genre": "new_genre",
         "publication_date": "2011-05-20",
+        "count": 10,
+        "price": 10000,
     }
     assert response.status_code == 200
     assert response_body == expected_response
@@ -270,6 +276,8 @@ def test_books_id_put_some_field(api_client):
         "authors": ["a_fn2 l3 p3"],
         "genre": "new_genre",
         "publication_date": "1990-01-01",
+        "count": 10,
+        "price": 10000,
     }
     assert response.status_code == 200
     assert response_body == expected_response
@@ -806,3 +814,139 @@ def test_users_not_found_id_delete(api_client):
 def test_users_id_delete(api_client_is_staff):
     response = api_client_is_staff.delete("/api/v2/users/3/")
     assert response.status_code == 204
+
+
+@pytest.mark.django_db
+def test_orders_get(api_client):
+    response = api_client.get("/api/v2/orders/")
+    response_body = response.json()
+    expected_response = json.load(open(root / "fixtures/orders_get_response.json"))
+    assert response.status_code == 200
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_post_valid_one_book(api_client):
+    body = {"books": [{"book_id": 1, "quantity": 2}]}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/orders/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    assert response.status_code == 200
+    assert "order_id" and "pageUrl" in response_body
+
+
+@pytest.mark.django_db
+def test_orders_post_valid_two_book(api_client):
+    body = {"books": [{"book_id": 1, "quantity": 2}, {"book_id": 2, "quantity": 3}]}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/orders/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    assert response.status_code == 200
+    assert "order_id" and "pageUrl" in response_body
+
+
+@pytest.mark.django_db
+def test_orders_post_invalid_book_not_found(api_client):
+    body = {"books": [{"book_id": 10, "quantity": 2}]}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/orders/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {"Error": "Book with id 10 not found"}
+    assert response.status_code == 404
+    assert expected_response == response_body
+
+
+@pytest.mark.django_db
+def test_orders_post_invalid_book_quantity_zero(api_client):
+    body = {"books": [{"book_id": 1, "quantity": 0}]}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/orders/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {"Error": "Quantity must be more that 0"}
+    assert response.status_code == 400
+    assert expected_response == response_body
+
+
+@pytest.mark.django_db
+def test_orders_post_invalid_count_book_zero(api_client):
+    body = {"books": [{"book_id": 3, "quantity": 2}]}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/orders/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {
+        "Error": "There are not enough books with id 3 in stock to create an order"
+    }
+    assert response.status_code == 406
+    assert expected_response == response_body
+
+
+@pytest.mark.django_db
+def test_orders_post_invalid_quantity(api_client):
+    body = {"books": [{"book_id": 3, "quantity": "one"}]}
+    json_body = json.dumps(body, indent=4)
+    response = api_client.post(
+        "/api/v2/orders/", data=json_body, content_type="application/json"
+    )
+    response_body = response.json()
+    expected_response = {"books": [{"quantity": ["A valid integer is required."]}]}
+    assert response.status_code == 400
+    assert expected_response == response_body
+
+
+@pytest.mark.django_db
+def test_orders_post_empty_json(api_client):
+    body = {}
+    response = api_client.post(
+        "/api/v2/orders/",
+        data=body,
+    )
+    response_body = response.json()
+    expected_response = {"books": ["This field is required."]}
+    assert response.status_code == 400
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_id_get(api_client):
+    response = api_client.get("/api/v2/orders/1/")
+    response_body = response.json()
+    expected_response = json.load(open(root / "fixtures/orders_id_get_response.json"))
+    assert response.status_code == 200
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_id_invalid_get(api_client):
+    response = api_client.get("/api/v2/orders/10/")
+    response_body = response.json()
+    expected_response = {"Error": "Order with id=10 not found"}
+    assert response.status_code == 404
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_id_delete(api_client_is_staff):
+    response = api_client_is_staff.delete("/api/v2/orders/1/")
+    response_body = response.json()
+    expected_response = {"Success": "Order with id=1 success delete"}
+    assert response.status_code == 200
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_id_delete_invalid_id(api_client_is_staff):
+    response = api_client_is_staff.delete("/api/v2/orders/10/")
+    response_body = response.json()
+    expected_response = {"Error": f"Order with id=10 not found"}
+    assert response.status_code == 404
+    assert response_body == expected_response

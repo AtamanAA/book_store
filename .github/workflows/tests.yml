@@ -11,3 +11,5 @@ jobs:
         run: |
           pip install -r requirements.txt
           pytest
+        env:
+          MONOBANK_API_KEY: ${{ vars.MONOBANK_API_KEY }}

@@ -5,5 +5,7 @@
     "a_fn1 l1 p1"
   ],
   "genre": "g1",
-  "publication_date": "1990-01-01"
+  "publication_date": "1990-01-01",
+  "count": 10,
+  "price": 10000
 }

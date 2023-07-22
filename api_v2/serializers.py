@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from author.models import Author
 from book.models import Book
+from order.models import Order
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -15,7 +16,15 @@ class AuthorSerializer(serializers.ModelSerializer):
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ["id", "name", "authors", "genre", "publication_date"]
+        fields = [
+            "id",
+            "name",
+            "authors",
+            "genre",
+            "publication_date",
+            "price",
+            "count",
+        ]
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -44,3 +53,26 @@ class UserSerializer(serializers.ModelSerializer):
         except ValidationError as exc:
             raise serializers.ValidationError(str(exc))
         return value
+
+
+class BooksOrderSerializer(serializers.Serializer):
+    book_id = serializers.IntegerField()
+    quantity = serializers.IntegerField()
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    books = BooksOrderSerializer(many=True)
+    user = UserSerializer(read_only=True)
+    status = serializers.CharField(max_length=128, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ["id", "user", "status", "books"]
+
+
+class MonoCallbackSerializer(serializers.Serializer):
+    invoiceId = serializers.CharField()
+    status = serializers.CharField()
+    amount = serializers.IntegerField()
+    ccy = serializers.IntegerField()
+    reference = serializers.CharField()

@@ -7,7 +7,16 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework.routers import DefaultRouter
 
-from .views import BookView, BookIdView, AuthorView, AuthorIdView, UserViewSet
+from .views import (
+    BookView,
+    BookIdView,
+    AuthorView,
+    AuthorIdView,
+    UserViewSet,
+    OrderView,
+    OrderIdView,
+    OrderCallbackView,
+)
 
 
 router = DefaultRouter()
@@ -22,4 +31,7 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("api/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
     path("", include(router.urls)),
+    path("orders/", csrf_exempt(OrderView.as_view()), name="all_orders"),
+    path("orders/<int:order_id>/", csrf_exempt(OrderIdView.as_view())),
+    path("monobank/callback", OrderCallbackView.as_view(), name="mono_callback"),
 ]
