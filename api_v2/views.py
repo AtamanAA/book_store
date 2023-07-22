@@ -9,12 +9,12 @@ from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 
-from .permissions import UserPermissions, OrderPermissions
+from .permissions import UserPermissions
 from .serializers import (
     AuthorSerializer,
     BookSerializer,
@@ -262,7 +262,7 @@ class OrderView(APIView):
 
 
 class OrderIdView(APIView):
-    permission_classes = [OrderPermissions]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, order_id):
         try:
@@ -287,7 +287,7 @@ class OrderIdView(APIView):
 
 
 class OrderCallbackView(APIView):
-    permission_classes = [OrderPermissions]
+    permission_classes = [AllowAny]
 
     def post(self, request):
         public_key = get_mono_token()

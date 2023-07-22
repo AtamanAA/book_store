@@ -21,6 +21,11 @@ def test_authors_get():
     assert r.status_code == 200
 
 
+def test_orders_get():
+    r = requests.get(BASE_URL + "orders/")
+    assert r.status_code == 200
+
+
 def test_users_post_valid():
     body = {"username": "test_user", "password": "random1!"}
     r = requests.post(BASE_URL + "users/", json=body)
@@ -265,6 +270,8 @@ def test_books_post_valid():
         "authors": [test_author_id],
         "genre": "test_genre",
         "publication_date": "2023-05-20",
+        "count": 10,
+        "price": 10000,
     }
     r = requests.post(
         BASE_URL + "books/", json=body, headers=test_token["token_header"]
@@ -434,6 +441,101 @@ def test_books_id_put_without_header():
     expected_response = {"detail": "Authentication credentials were not provided."}
     assert r.status_code == 401
     assert response_body == expected_response
+
+
+def test_orders_post_valid_one_book():
+    test_book_id = test_id["test_book_id"]
+    body = {"books": [{"book_id": test_book_id, "quantity": 2}]}
+    r = requests.post(
+        BASE_URL + "orders/", json=body, headers=test_token["token_header"]
+    )
+    response_body = r.json()
+    test_id["test_order_id"] = response_body["order_id"]
+    assert r.status_code == 200
+    assert "order_id" and "pageUrl" in response_body
+
+
+def test_orders_post_invalid_book_not_found():
+    test_book_id = test_id["test_book_id"] + 10
+    body = {"books": [{"book_id": test_book_id, "quantity": 2}]}
+    r = requests.post(
+        BASE_URL + "orders/", json=body, headers=test_token["token_header"]
+    )
+    response_body = r.json()
+    expected_response = {"Error": f"Book with id {test_book_id} not found"}
+    assert r.status_code == 404
+    assert expected_response == response_body
+
+
+def test_orders_post_invalid_book_quantity_zero():
+    test_book_id = test_id["test_book_id"]
+    body = {"books": [{"book_id": test_book_id, "quantity": 0}]}
+    r = requests.post(
+        BASE_URL + "orders/", json=body, headers=test_token["token_header"]
+    )
+    response_body = r.json()
+    expected_response = {"Error": "Quantity must be more that 0"}
+    assert r.status_code == 400
+    assert expected_response == response_body
+
+
+def test_orders_post_invalid_many_count_book():
+    test_book_id = test_id["test_book_id"]
+    body = {"books": [{"book_id": test_book_id, "quantity": 2000}]}
+    r = requests.post(
+        BASE_URL + "orders/", json=body, headers=test_token["token_header"]
+    )
+    response_body = r.json()
+    expected_response = {
+        "Error": f"There are not enough books with id {test_book_id} in stock to create an order"
+    }
+    assert r.status_code == 406
+    assert expected_response == response_body
+
+
+def test_orders_post_invalid_quantity():
+    test_book_id = test_id["test_book_id"]
+    body = {"books": [{"book_id": test_book_id, "quantity": "one"}]}
+    r = requests.post(
+        BASE_URL + "orders/", json=body, headers=test_token["token_header"]
+    )
+    response_body = r.json()
+    expected_response = {"books": [{"quantity": ["A valid integer is required."]}]}
+    assert r.status_code == 400
+    assert expected_response == response_body
+
+
+def test_orders_post_empty_json():
+    body = {}
+    r = requests.post(
+        BASE_URL + "orders/", json=body, headers=test_token["token_header"]
+    )
+    response_body = r.json()
+    expected_response = {"books": ["This field is required."]}
+    assert r.status_code == 400
+    assert expected_response == response_body
+
+
+# def test_orders_delete_without_header():
+#     order_id = test_id["test_order_id"]
+#     r = requests.delete(BASE_URL + f"orders/{order_id}/")
+#     response_body = r.json()
+#     expected_response = {"detail": "Authentication credentials were not provided."}
+#     assert r.status_code == 401
+#     assert response_body == expected_response
+
+
+def test_orders_delete_valid():
+    body_admin_token = {
+        "username": "admin",
+        "password": "random1!",
+    }
+    r = requests.post(BASE_URL + "token/", json=body_admin_token)
+    response_body = r.json()
+    admin_token = {"Authorization": "Bearer " + response_body["access"]}
+    order_id = test_id["test_order_id"]
+    r = requests.delete(BASE_URL + f"orders/{order_id}/", headers=admin_token)
+    assert r.status_code == 200
 
 
 def test_books_delete_without_header():

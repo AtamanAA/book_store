@@ -876,7 +876,7 @@ def test_orders_post_invalid_book_quantity_zero(api_client):
 
 
 @pytest.mark.django_db
-def test_orders_post_invalid_count_book_zero(api_client):
+def test_orders_post_invalid_many_count_book(api_client):
     body = {"books": [{"book_id": 3, "quantity": 2}]}
     json_body = json.dumps(body, indent=4)
     response = api_client.post(
