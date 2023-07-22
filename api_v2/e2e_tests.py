@@ -516,13 +516,13 @@ def test_orders_post_empty_json():
     assert expected_response == response_body
 
 
-# def test_orders_delete_without_header():
-#     order_id = test_id["test_order_id"]
-#     r = requests.delete(BASE_URL + f"orders/{order_id}/")
-#     response_body = r.json()
-#     expected_response = {"detail": "Authentication credentials were not provided."}
-#     assert r.status_code == 401
-#     assert response_body == expected_response
+def test_orders_delete_without_header():
+    order_id = test_id["test_order_id"]
+    r = requests.delete(BASE_URL + f"orders/{order_id}/")
+    response_body = r.json()
+    expected_response = {"detail": "Authentication credentials were not provided."}
+    assert r.status_code == 401
+    assert response_body == expected_response
 
 
 def test_orders_delete_valid():
