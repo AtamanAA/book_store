@@ -545,12 +545,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error_404_User'
 
-
-
-
-
-
-
   /orders/:
     get:
       tags:
@@ -584,10 +578,10 @@ paths:
             examples:
               "Buy one book with id 45":
                 value:
-                  [ { "book_id": 45, "quantity": 1 } ]
+                  { "books": [ { "book_id": 45, "quantity": 1 } ] }
               "Buy three books, one with id 2 and two with id 6":
                 value:
-                  [ { "book_id": 2, "quantity": 1 }, { "book_id": 6, "quantity": 2 } ]
+                  { "books": [ { "book_id": 2, "quantity": 1 }, { "book_id": 6, "quantity": 2 } ] }
         required: true
       responses:
         '200':
@@ -595,7 +589,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Order'
+                $ref: '#/components/schemas/Order_post_200'
         '400':
           description: Bad request
           content:
@@ -610,10 +604,70 @@ paths:
                 $ref: '#/components/schemas/Error_Order_401'
 
 
+  /orders/{orderId}:
+    get:
+      tags:
+        - orders
+      summary: Find order by ID
+      description: Returns a single order
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          description: ID of order to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_Order'
 
-
-
-
+    delete:
+      tags:
+        - orders
+      summary: Delete order by ID
+      description: Delete order from the store
+      operationId: deleteOrder
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          description: ID of order to delete
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order_after_delete'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_Order_401'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_404_Order'
 
   /token/:
     post:
@@ -935,8 +989,6 @@ components:
           type: string
           example: Update username
 
-
-
     Order:
       type: object
       properties:
@@ -944,7 +996,7 @@ components:
           type: integer
           format: int64
           example: 10
-        user:
+        user_id:
           type: integer
           format: int64
           example: 1
@@ -957,11 +1009,17 @@ components:
                 type: integer
                 format: int64
                 example: 10
+              book_name:
+                type: string
+                example: book 1
               quantity:
                 type: integer
                 format: int64
                 example: 1
-        total_price:
+        status:
+          type: string
+          example: created
+        full_price:
           type: integer
           format: int64
           example: 40000
@@ -969,10 +1027,28 @@ components:
           type: string
           format: date-time
           example: 2022-09-01T13:20:30
-        status:
+        invoce_id:
           type: string
-          example: created
-
+          example: 2307223ZzWd3Ys2Fs2nW
+        pay_url:
+          type: string
+          example: https://pay.mbnk.biz/2307223ZzWd3Ys2Fs2nW
+    Order_post_200:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          format: int64
+          example: 10
+        pageUrl:
+          type: string
+          example: https://pay.mbnk.biz/2307227rQ81wgaAonQHd
+    Order_after_delete:
+      type: object
+      properties:
+        Success:
+          type: string
+          example: Order with id=10 success delete
 
     Token:
       type: object
@@ -1205,6 +1281,12 @@ components:
         detail:
           type: string
           example: Authentication credentials were not provided.
+    Error_404_Order:
+      type: object
+      properties:
+        Error:
+          type: string
+          example: Order with id=100 not found
 
 
 
