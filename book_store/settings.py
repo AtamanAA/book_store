@@ -245,8 +245,8 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
 }
 
-env_var = dotenv_values(".env")
-MONOBANK_API_KEY = env_var["MONOBANK_API_KEY"]
+
+MONOBANK_API_KEY = os.getenv("MONOBANK_API_KEY")
 
 
 try:
