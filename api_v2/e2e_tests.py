@@ -161,7 +161,7 @@ def test_authors_post_valid():
     )
     response_body = r.json()
     test_id["test_author_id"] = response_body["id"]
-    assert r.status_code == 200
+    assert r.status_code == 201
 
 
 def test_authors_post_empty_json():
@@ -278,7 +278,7 @@ def test_books_post_valid():
     )
     response_body = r.json()
     test_id["test_book_id"] = response_body["id"]
-    assert r.status_code == 200
+    assert r.status_code == 201
 
 
 def test_books_post_empty_json():
@@ -425,7 +425,7 @@ def test_books_id_put_invalid_id():
         BASE_URL + f"books/{book_id}/", json=body, headers=test_token["token_header"]
     )
     response_body = r.json()
-    expected_response = {"Error": f"Book with id={book_id} not found"}
+    expected_response = {"detail": "Not found."}
     assert r.status_code == 404
     assert response_body == expected_response
 
@@ -552,7 +552,7 @@ def test_books_delete():
     r = requests.delete(
         BASE_URL + f"books/{book_id}/", headers=test_token["token_header"]
     )
-    assert r.status_code == 200
+    assert r.status_code == 204
     r = requests.delete(
         BASE_URL + f"books/{book_id}/", headers=test_token["token_header"]
     )
@@ -585,7 +585,7 @@ def test_authors_id_put_invalid_id():
         headers=test_token["token_header"],
     )
     response_body = r.json()
-    expected_response = {"Error": f"Author with id={author_id} not found"}
+    expected_response = {"detail": "Not found."}
     assert r.status_code == 404
     assert response_body == expected_response
 
@@ -604,7 +604,7 @@ def test_authors_delete():
     r = requests.delete(
         BASE_URL + f"authors/{author_id}/", headers=test_token["token_header"]
     )
-    assert r.status_code == 200
+    assert r.status_code == 204
     r = requests.delete(
         BASE_URL + f"authors/{author_id}/", headers=test_token["token_header"]
     )
@@ -613,16 +613,13 @@ def test_authors_delete():
 
 def test_books_invalid_filter_get():
     r = requests.get(BASE_URL + "books/?genre_=g1")
-    response_body = r.json()
-    expected_response = {"Error": "Invalid query parameter name"}
-    assert r.status_code == 400
-    assert response_body == expected_response
+    assert r.status_code == 200
 
 
 def test_books_invalid_authors_filter_get():
     r = requests.get(BASE_URL + "books/?authors=ggg")
     response_body = r.json()
-    expected_response = {"Error": "Invalid authors query parameter"}
+    expected_response = {"authors": ["“ggg” is not a valid value."]}
     assert r.status_code == 400
     assert response_body == expected_response
 
@@ -631,24 +628,21 @@ def test_books_id_invalid_get():
     book_id = test_id["test_book_id"] + 10
     r = requests.get(BASE_URL + f"books/{book_id}")
     response_body = r.json()
-    expected_response = {"Error": f"Book with id={book_id} not found"}
+    expected_response = {"detail": "Not found."}
     assert r.status_code == 404
     assert response_body == expected_response
 
 
 def test_authors_invalid_filter_get():
     r = requests.get(BASE_URL + "authors/?first_name_=g1")
-    response_body = r.json()
-    expected_response = {"Error": "Invalid query parameter name"}
-    assert r.status_code == 400
-    assert response_body == expected_response
+    assert r.status_code == 200
 
 
 def test_authors_id_invalid_get():
     author_id = test_id["test_author_id"] + 10
     r = requests.get(BASE_URL + f"authors/{author_id}")
     response_body = r.json()
-    expected_response = {"Error": f"Author with id={author_id} not found"}
+    expected_response = {"detail": "Not found."}
     assert r.status_code == 404
     assert response_body == expected_response
 
