@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from django.db import transaction
 from django.http import HttpRequest
 from django.http import JsonResponse
 from django.urls import reverse
@@ -144,36 +145,46 @@ class OrderView(APIView):
             )
             order.save()
 
-            for row in serializer.data["books"]:
-                book_id = row["book_id"]
-                try:
-                    book = Book.objects.get(pk=book_id)
-                except Book.DoesNotExist:
-                    return Response(
-                        {"Error": f"Book with id {book_id} not found"},
-                        status=status.HTTP_404_NOT_FOUND,
-                    )
-                quantity = row["quantity"]
-                if book.count < quantity:
-                    return Response(
-                        {
-                            "Error": f"There are not enough books with id {book_id} in stock to create an order"
-                        },
-                        status=status.HTTP_406_NOT_ACCEPTABLE,
-                    )
-                if quantity > 0:
-                    order_item = OrderItem(order=order, book=book, quantity=quantity)
-                    order_item.save()
-                else:
-                    return Response(
-                        {"Error": "Quantity must be more that 0"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            webhook_url = request.build_absolute_uri(reverse("mono_callback"))
-            response = create_mono_order(order, webhook_url)
-            return Response(response)
-
+            if serializer.data["books"]:
+                for row in serializer.data["books"]:
+                    book_id = row["book_id"]
+                    try:
+                        book = Book.objects.get(pk=book_id)
+                    except Book.DoesNotExist:
+                        order.delete()
+                        return Response(
+                            {"Error": f"Book with id {book_id} not found"},
+                            status=status.HTTP_404_NOT_FOUND,
+                        )
+                    quantity = row["quantity"]
+                    if book.count < quantity:
+                        order.delete()
+                        return Response(
+                            {
+                                "Error": f"There are not enough books with id {book_id} in stock to create an order"
+                            },
+                            status=status.HTTP_406_NOT_ACCEPTABLE,
+                        )
+                    if quantity > 0:
+                        order_item = OrderItem(
+                            order=order, book=book, quantity=quantity
+                        )
+                        order_item.save()
+                    else:
+                        order.delete()
+                        return Response(
+                            {"Error": "Quantity must be more that 0"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                webhook_url = request.build_absolute_uri(reverse("mono_callback"))
+                response = create_mono_order(order, webhook_url)
+                return Response(response)
+            else:
+                order.delete()
+                return Response(
+                    {"books": ["This field is required."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         return JsonResponse(serializer.errors, status=400)
 
 

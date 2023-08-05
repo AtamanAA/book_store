@@ -911,6 +911,19 @@ def test_orders_post_empty_json(api_client):
 
 
 @pytest.mark.django_db
+def test_orders_post_empty_book_list(api_client):
+    body = {"books": []}
+    response = api_client.post(
+        "/api/v2/orders/",
+        data=body,
+    )
+    response_body = response.json()
+    expected_response = {"books": ["This field is required."]}
+    assert response.status_code == 400
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
 def test_orders_id_get(api_client):
     response = api_client.get("/api/v2/orders/1/")
     response_body = response.json()
