@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from django.db import transaction
 from django.http import HttpRequest
 from django.http import JsonResponse
 from django.urls import reverse
@@ -28,154 +29,69 @@ from order.models import Order, OrderItem
 from order.mono import verify_signature, create_mono_order, get_mono_token
 
 
-class BookView(APIView):
-    permission_classes = [
-        IsAuthenticatedOrReadOnly,
-    ]
+@method_decorator(cache_page(60 * 5), name="list")
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filterset_fields = ["name", "genre", "authors", "publication_date"]
 
-    @method_decorator(cache_page(60 * 5))
-    def get(self, request):
-        try:
-            optional_parameters = ["name", "genre", "authors"]
-            filters = {}
-            for key, value in request.GET.items():
-                if key in optional_parameters:
-                    if value:
-                        filters[key] = value
-                else:
-                    return JsonResponse(
-                        {"Error": "Invalid query parameter name"}, status=400
-                    )
-            books = [book.get_info() for book in Book.objects.filter(**filters)]
-            return JsonResponse(books, safe=False)
-        except ValueError:
-            return JsonResponse(
-                {"Error": "Invalid authors query parameter"}, status=400
-            )
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
 
-    def post(self, request):
-        serializer = BookSerializer(data=request.data)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            books = []
+            for item in serializer.data:
+                book = Book.objects.get(id=item["id"])
+                books.append(book.get_info())
+            return self.get_paginated_response(books)
+
+        serializer = self.get_serializer(queryset, many=True)
+        books = []
+        for item in serializer.data:
+            book = Book.objects.get(id=item["id"])
+            books.append(book.get_info())
+        return Response(books)
+
+    def retrieve(self, request, *args, **kwargs):
+        book = self.get_object()
+        return Response(book.get_info())
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        book = Book.objects.get(pk=serializer.data["id"])
+        return Response(
+            book.get_info(), status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def update(self, request, *args, **kwargs):
+        book = self.get_object()
+        serializer = BookSerializer(book, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            book = Book.objects.get(id=serializer.data["id"])
-            expire_view_cache(request, "all_books")
-            return JsonResponse(book.get_info(), safe=False)
-        return JsonResponse(serializer.errors, status=400)
+            return Response(book.get_info(), status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class BookIdView(APIView):
-    permission_classes = [
-        IsAuthenticatedOrReadOnly,
-    ]
+@method_decorator(cache_page(60 * 5), name="list")
+class AuthorViewSet(viewsets.ModelViewSet):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filterset_fields = ["first_name"]
 
-    def get(self, request, book_id):
-        try:
-            book = Book.objects.get(id=book_id)
-            return JsonResponse(book.get_info(), safe=False)
-        except Book.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Book with id={book_id} not found"}, status=404
-            )
-
-    def put(self, request, book_id):
-        try:
-            book = Book.objects.get(id=book_id)
-            serializer = BookSerializer(book, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                expire_view_cache(request, "all_books")
-                return JsonResponse(book.get_info(), safe=False)
-            return JsonResponse(serializer.errors, status=400)
-        except Book.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Book with id={book_id} not found"}, status=404
-            )
-
-    def delete(self, request, book_id):
-        try:
-            book = Book.objects.get(id=book_id)
-            book.delete()
-            expire_view_cache(request, "all_books")
-            return JsonResponse(
-                {"Success": f"Book with id={book_id} success delete"}, status=200
-            )
-        except Book.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Book with id={book_id} not found"}, status=404
-            )
-
-
-class AuthorView(APIView):
-    permission_classes = [
-        IsAuthenticatedOrReadOnly,
-    ]
-
-    @method_decorator(cache_page(60 * 5))
-    def get(self, request):
-        optional_parameters = ["first_name"]
-        filters = {}
-        for key, value in request.GET.items():
-            if key in optional_parameters:
-                if value:
-                    filters[key] = value
-            else:
-                return JsonResponse(
-                    {"Error": "Invalid query parameter name"}, status=400
-                )
-        authors = Author.objects.filter(**filters)
-        serializer = AuthorSerializer(authors, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    def post(self, request):
-        serializer = AuthorSerializer(data=request.data)
+    def update(self, request, *args, **kwargs):
+        author = self.get_object()
+        serializer = AuthorSerializer(author, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            expire_view_cache(request, "all_authors")
             return JsonResponse(serializer.data, safe=False)
-        return JsonResponse(serializer.errors, status=400)
-
-
-class AuthorIdView(APIView):
-    permission_classes = [
-        IsAuthenticatedOrReadOnly,
-    ]
-
-    def get(self, request, author_id):
-        try:
-            author = Author.objects.get(id=author_id)
-            serializer = AuthorSerializer(author)
-            return JsonResponse(serializer.data, safe=False)
-        except Author.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Author with id={author_id} not found"}, status=404
-            )
-
-    def put(self, request, author_id):
-        try:
-            author = Author.objects.get(id=author_id)
-            serializer = AuthorSerializer(author, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                expire_view_cache(request, "all_authors")
-                return JsonResponse(serializer.data, safe=False)
-            return JsonResponse(serializer.errors, status=400)
-        except Author.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Author with id={author_id} not found"}, status=404
-            )
-
-    def delete(self, request, author_id):
-        try:
-            author = Author.objects.get(id=author_id)
-            author.delete()
-            expire_view_cache(request, "all_authors")
-            return JsonResponse(
-                {"Success": f"Author with id={author_id} success delete"}, status=200
-            )
-        except Author.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Author with id={author_id} not found"}, status=404
-            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def expire_view_cache(request, view_name, args=None, key_prefix=None):
@@ -211,6 +127,7 @@ class UserViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = UserSerializer
     queryset = User.objects.all()
+    pagination_class = None
 
 
 class OrderView(APIView):
@@ -228,36 +145,46 @@ class OrderView(APIView):
             )
             order.save()
 
-            for row in serializer.data["books"]:
-                book_id = row["book_id"]
-                try:
-                    book = Book.objects.get(pk=book_id)
-                except Book.DoesNotExist:
-                    return Response(
-                        {"Error": f"Book with id {book_id} not found"},
-                        status=status.HTTP_404_NOT_FOUND,
-                    )
-                quantity = row["quantity"]
-                if book.count < quantity:
-                    return Response(
-                        {
-                            "Error": f"There are not enough books with id {book_id} in stock to create an order"
-                        },
-                        status=status.HTTP_406_NOT_ACCEPTABLE,
-                    )
-                if quantity > 0:
-                    order_item = OrderItem(order=order, book=book, quantity=quantity)
-                    order_item.save()
-                else:
-                    return Response(
-                        {"Error": "Quantity must be more that 0"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-            webhook_url = request.build_absolute_uri(reverse("mono_callback"))
-            response = create_mono_order(order, webhook_url)
-            return Response(response)
-
+            if serializer.data["books"]:
+                for row in serializer.data["books"]:
+                    book_id = row["book_id"]
+                    try:
+                        book = Book.objects.get(pk=book_id)
+                    except Book.DoesNotExist:
+                        order.delete()
+                        return Response(
+                            {"Error": f"Book with id {book_id} not found"},
+                            status=status.HTTP_404_NOT_FOUND,
+                        )
+                    quantity = row["quantity"]
+                    if book.count < quantity:
+                        order.delete()
+                        return Response(
+                            {
+                                "Error": f"There are not enough books with id {book_id} in stock to create an order"
+                            },
+                            status=status.HTTP_406_NOT_ACCEPTABLE,
+                        )
+                    if quantity > 0:
+                        order_item = OrderItem(
+                            order=order, book=book, quantity=quantity
+                        )
+                        order_item.save()
+                    else:
+                        order.delete()
+                        return Response(
+                            {"Error": "Quantity must be more that 0"},
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+                webhook_url = request.build_absolute_uri(reverse("mono_callback"))
+                response = create_mono_order(order, webhook_url)
+                return Response(response)
+            else:
+                order.delete()
+                return Response(
+                    {"books": ["This field is required."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         return JsonResponse(serializer.errors, status=400)
 
 

@@ -58,8 +58,8 @@ def test_books_valid_filter_get(api_client):
 def test_books_invalid_filter_get(api_client):
     response = api_client.get("/api/v2/books/?genre_=g1")
     response_body = response.json()
-    expected_response = {"Error": "Invalid query parameter name"}
-    assert response.status_code == 400
+    expected_response = json.load(open(root / "fixtures/books_get_response.json"))
+    assert response.status_code == 200
     assert response_body == expected_response
 
 
@@ -67,7 +67,7 @@ def test_books_invalid_filter_get(api_client):
 def test_books_invalid_authors_filter_get(api_client):
     response = api_client.get("/api/v2/books/?authors=ggg")
     response_body = response.json()
-    expected_response = {"Error": "Invalid authors query parameter"}
+    expected_response = {"authors": ["“ggg” is not a valid value."]}
     assert response.status_code == 400
     assert response_body == expected_response
 
@@ -85,7 +85,7 @@ def test_books_id_get(api_client):
 def test_books_id_invalid_get(api_client):
     response = api_client.get("/api/v2/books/10/")
     response_body = response.json()
-    expected_response = {"Error": "Book with id=10 not found"}
+    expected_response = {"detail": "Not found."}
     assert response.status_code == 404
     assert response_body == expected_response
 
@@ -114,7 +114,7 @@ def test_books_post_valid_new(api_client):
         "count": 10,
         "price": 10000,
     }
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response_body == expected_response
 
 
@@ -354,7 +354,7 @@ def test_books_id_put_invalid_id(api_client):
         "/api/v2/books/10/", data=json_body, content_type="application/json"
     )
     response_body = response.json()
-    expected_response = {"Error": f"Book with id=10 not found"}
+    expected_response = {"detail": "Not found."}
     assert response.status_code == 404
     assert response_body == expected_response
 
@@ -362,17 +362,14 @@ def test_books_id_put_invalid_id(api_client):
 @pytest.mark.django_db
 def test_books_id_delete(api_client):
     response = api_client.delete("/api/v2/books/1/")
-    response_body = response.json()
-    expected_response = {"Success": "Book with id=1 success delete"}
-    assert response.status_code == 200
-    assert response_body == expected_response
+    assert response.status_code == 204
 
 
 @pytest.mark.django_db
 def test_books_id_delete_invalid_id(api_client):
     response = api_client.delete("/api/v2/books/10/")
     response_body = response.json()
-    expected_response = {"Error": f"Book with id=10 not found"}
+    expected_response = {"detail": "Not found."}
     assert response.status_code == 404
     assert response_body == expected_response
 
@@ -399,10 +396,10 @@ def test_authors_valid_filter_get(api_client):
 
 @pytest.mark.django_db
 def test_authors_invalid_filter_get(api_client):
-    response = api_client.get("/api/v2/authors/?first_name_=a_fn2")
+    response = api_client.get("/api/v2/authors/?name=a_fn2")
     response_body = response.json()
-    expected_response = {"Error": "Invalid query parameter name"}
-    assert response.status_code == 400
+    expected_response = json.load(open(root / "fixtures/authors_get_response.json"))
+    assert response.status_code == 200
     assert response_body == expected_response
 
 
@@ -426,7 +423,7 @@ def test_authors_post_valid(api_client):
         "patronymic": "p4",
         "birthday": "1970-05-20",
     }
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response_body == expected_response
 
 
@@ -521,7 +518,7 @@ def test_authors_id_valid_get(api_client):
 def test_authors_id_invalid_get(api_client):
     response = api_client.get("/api/v2/authors/10/")
     response_body = response.json()
-    expected_response = {"Error": "Author with id=10 not found"}
+    expected_response = {"detail": "Not found."}
     assert response.status_code == 404
     assert response_body == expected_response
 
@@ -633,7 +630,7 @@ def test_authors_id_put_invalid_id(api_client):
         "/api/v2/authors/10/", data=json_body, content_type="application/json"
     )
     response_body = response.json()
-    expected_response = {"Error": f"Author with id=10 not found"}
+    expected_response = {"detail": "Not found."}
     assert response.status_code == 404
     assert response_body == expected_response
 
@@ -641,17 +638,14 @@ def test_authors_id_put_invalid_id(api_client):
 @pytest.mark.django_db
 def test_authors_id_delete(api_client):
     response = api_client.delete("/api/v2/authors/1/")
-    response_body = response.json()
-    expected_response = {"Success": "Author with id=1 success delete"}
-    assert response.status_code == 200
-    assert response_body == expected_response
+    assert response.status_code == 204
 
 
 @pytest.mark.django_db
 def test_authors_id_delete_invalid_id(api_client):
     response = api_client.delete("/api/v2/authors/10/")
     response_body = response.json()
-    expected_response = {"Error": f"Author with id=10 not found"}
+    expected_response = {"detail": "Not found."}
     assert response.status_code == 404
     assert response_body == expected_response
 
@@ -906,6 +900,19 @@ def test_orders_post_invalid_quantity(api_client):
 @pytest.mark.django_db
 def test_orders_post_empty_json(api_client):
     body = {}
+    response = api_client.post(
+        "/api/v2/orders/",
+        data=body,
+    )
+    response_body = response.json()
+    expected_response = {"books": ["This field is required."]}
+    assert response.status_code == 400
+    assert response_body == expected_response
+
+
+@pytest.mark.django_db
+def test_orders_post_empty_book_list(api_client):
+    body = {"books": []}
     response = api_client.post(
         "/api/v2/orders/",
         data=body,
