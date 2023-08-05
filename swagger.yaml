@@ -46,6 +46,12 @@ paths:
           schema:
             type: integer
             format: int64
+        - name: publication_date
+          in: query
+          description: publication date
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: successful operation
@@ -54,13 +60,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Book'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error_400_get'
+                  $ref: '#/components/schemas/Book_pagination_list'
     post:
       tags:
         - books
@@ -96,7 +96,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error_Book_401'
 
-  /books/{bookId}:
+  /books/{bookId}/:
     get:
       tags:
         - books
@@ -189,12 +189,8 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Book_after_delete'
+        '204':
+          description: No content
         '401':
           description: Unauthorized
           content:
@@ -229,12 +225,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Author_pagination_list'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error_400_get'
     post:
       tags:
         - authors
@@ -767,6 +757,28 @@ components:
           type: integer
           format: int64
           example: 9
+
+
+    Book_pagination_list:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+          example: 1
+        next:
+          type: string
+          example: http://book_store/api/v2/books/?limit=10&offset=10
+        previous:
+          type: string
+          example: null
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+
+
+
     Book_post_request_body:
       type: object
       properties:
@@ -858,12 +870,6 @@ components:
           type: integer
           format: int64
           example: 9
-    Book_after_delete:
-      type: object
-      properties:
-        Success:
-          type: string
-          example: Book with id=10 success delete
 
     Author:
       type: object
@@ -892,7 +898,7 @@ components:
         count:
           type: integer
           format: int64
-          example: 21
+          example: 1
         next:
           type: string
           example: http://book_store/api/v2/authors/?limit=10&offset=10
@@ -1092,12 +1098,6 @@ components:
           type: string
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY4OTI0ODk2NiwiaWF0IjoxNjg5MTYyNTY2LCJqdGkiOiIxNDVmYTc1ZjI0N2U0MGFmYTU1MjZkZmMzMjA1MTk0NCIsInVzZXJfaWQiOjF9.BL00mXFcWX5pO_tlszbB78e-HJcAQ9RTuEDMsbpoJeM
 
-    Error_400_get:
-      type: object
-      properties:
-        Error:
-          type: string
-          example: Invalid query parameter
     Error_400_book_post:
       type: object
       properties:
@@ -1153,9 +1153,9 @@ components:
     Error_404_Book:
       type: object
       properties:
-        Error:
+        detail:
           type: string
-          example: Book with id=100 not found
+          example: Not found.
 
     Error_404_Author:
       type: object
