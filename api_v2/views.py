@@ -9,6 +9,7 @@ from django.utils.cache import get_cache_key
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework import viewsets
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -33,7 +34,7 @@ class BookView(APIView):
         IsAuthenticatedOrReadOnly,
     ]
 
-    @method_decorator(cache_page(60 * 5))
+    # @method_decorator(cache_page(60 * 5))
     def get(self, request):
         try:
             optional_parameters = ["name", "genre", "authors"]
@@ -105,77 +106,20 @@ class BookIdView(APIView):
             )
 
 
-class AuthorView(APIView):
-    permission_classes = [
-        IsAuthenticatedOrReadOnly,
-    ]
+@method_decorator(cache_page(60 * 5), name="list")
+class AuthorViewSet(viewsets.ModelViewSet):
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filterset_fields = ["first_name"]
 
-    @method_decorator(cache_page(60 * 5))
-    def get(self, request):
-        optional_parameters = ["first_name"]
-        filters = {}
-        for key, value in request.GET.items():
-            if key in optional_parameters:
-                if value:
-                    filters[key] = value
-            else:
-                return JsonResponse(
-                    {"Error": "Invalid query parameter name"}, status=400
-                )
-        authors = Author.objects.filter(**filters)
-        serializer = AuthorSerializer(authors, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    def post(self, request):
-        serializer = AuthorSerializer(data=request.data)
+    def update(self, request, *args, **kwargs):
+        author = self.get_object()
+        serializer = AuthorSerializer(author, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            expire_view_cache(request, "all_authors")
             return JsonResponse(serializer.data, safe=False)
-        return JsonResponse(serializer.errors, status=400)
-
-
-class AuthorIdView(APIView):
-    permission_classes = [
-        IsAuthenticatedOrReadOnly,
-    ]
-
-    def get(self, request, author_id):
-        try:
-            author = Author.objects.get(id=author_id)
-            serializer = AuthorSerializer(author)
-            return JsonResponse(serializer.data, safe=False)
-        except Author.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Author with id={author_id} not found"}, status=404
-            )
-
-    def put(self, request, author_id):
-        try:
-            author = Author.objects.get(id=author_id)
-            serializer = AuthorSerializer(author, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                expire_view_cache(request, "all_authors")
-                return JsonResponse(serializer.data, safe=False)
-            return JsonResponse(serializer.errors, status=400)
-        except Author.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Author with id={author_id} not found"}, status=404
-            )
-
-    def delete(self, request, author_id):
-        try:
-            author = Author.objects.get(id=author_id)
-            author.delete()
-            expire_view_cache(request, "all_authors")
-            return JsonResponse(
-                {"Success": f"Author with id={author_id} success delete"}, status=200
-            )
-        except Author.DoesNotExist:
-            return JsonResponse(
-                {"Error": f"Author with id={author_id} not found"}, status=404
-            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def expire_view_cache(request, view_name, args=None, key_prefix=None):
@@ -211,6 +155,7 @@ class UserViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = UserSerializer
     queryset = User.objects.all()
+    pagination_class = None
 
 
 class OrderView(APIView):

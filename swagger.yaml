@@ -3,7 +3,7 @@ info:
   title: Book store
   description: |-
     Book store with simple API
-  version: 1.0.4
+  version: 1.0.5
 servers:
   - url: https://ataman-book-store-71ea28220527.herokuapp.com/api/v2
   - url: http://127.0.0.1:8000/api/v2/
@@ -228,9 +228,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Author'
+                $ref: '#/components/schemas/Author_pagination_list'
         '400':
           description: Bad request
           content:
@@ -271,7 +269,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error_Author_401'
-  /authors/{authorId}:
+  /authors/{authorId}/:
     get:
       tags:
         - authors
@@ -364,12 +362,9 @@ paths:
             type: integer
             format: int64
       responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Author_after_delete'
+        '204':
+          description: No Content
+
         '401':
           description: Unauthorized
           content:
@@ -890,6 +885,25 @@ components:
           type: string
           format: date
           example: 1859-05-22
+
+    Author_pagination_list:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+          example: 21
+        next:
+          type: string
+          example: http://book_store/api/v2/authors/?limit=10&offset=10
+        previous:
+          type: string
+          example: null
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Author'
+
     Author_post_request_body:
       type: object
       properties:
@@ -942,12 +956,6 @@ components:
           type: string
           format: date
           example: 1970-07-31
-    Author_after_delete:
-      type: object
-      properties:
-        Success:
-          type: string
-          example: Author with id=10 success delete
 
     User:
       type: object
@@ -1152,9 +1160,9 @@ components:
     Error_404_Author:
       type: object
       properties:
-        Error:
+        detail:
           type: string
-          example: Author with id=100 not found
+          example: Not found.
     Error_400_author_post:
       type: object
       properties:
