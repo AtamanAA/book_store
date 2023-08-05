@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.db import transaction
 from django.http import HttpRequest
 from django.http import JsonResponse
 from django.urls import reverse
