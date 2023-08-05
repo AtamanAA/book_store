@@ -93,33 +93,6 @@ class AuthorViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def expire_view_cache(request, view_name, args=None, key_prefix=None):
-    if request.get_host() == "testserver":
-        request_meta = {"SERVER_NAME": "127.0.0.1", "SERVER_PORT": "8000"}
-    else:
-        request_meta = {
-            "SERVER_NAME": request.META["SERVER_NAME"],
-            "SERVER_PORT": request.META["SERVER_PORT"],
-        }
-
-    request = HttpRequest()
-    request.META = request_meta
-    request.path = reverse(view_name, args=args)
-
-    if settings.USE_I18N:
-        request.LANGUAGE_CODE = settings.LANGUAGE_CODE
-
-    cache_key = get_cache_key(request, key_prefix=key_prefix)
-    if cache_key:
-        if cache_key in cache:
-            cache.delete(cache_key)
-            return True
-        else:
-            return False
-    else:
-        return False
-
-
 class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [
         UserPermissions,
