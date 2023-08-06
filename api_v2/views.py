@@ -32,7 +32,7 @@ class BookViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["name", "genre", "authors"]
-    ordering_fields = ['publication_date']
+    ordering_fields = ["publication_date"]
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
