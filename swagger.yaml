@@ -46,9 +46,9 @@ paths:
           schema:
             type: integer
             format: int64
-        - name: publication_date
+        - name: ordering
           in: query
-          description: publication date
+          description: ordering by publication_date
           required: false
           schema:
             type: string
@@ -61,6 +61,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Book_pagination_list'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error_400_get'
     post:
       tags:
         - books
@@ -1097,6 +1103,16 @@ components:
         refresh:
           type: string
           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY4OTI0ODk2NiwiaWF0IjoxNjg5MTYyNTY2LCJqdGkiOiIxNDVmYTc1ZjI0N2U0MGFmYTU1MjZkZmMzMjA1MTk0NCIsInVzZXJfaWQiOjF9.BL00mXFcWX5pO_tlszbB78e-HJcAQ9RTuEDMsbpoJeM
+
+
+    Error_400_get:
+      type: object
+      properties:
+        publication_date:
+          type: array
+          items:
+            type: string
+            example: Enter a valid date.
 
     Error_400_book_post:
       type: object
