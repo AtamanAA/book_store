@@ -3,8 +3,7 @@
 ## API для магазину книжок
 #### DRF, Docker, Docker compose, Postgres, Redis, Pytest, Swagger, OpenAPI
 
-### Документація для API у файлі: swagger.yaml 
-
+### [Документація для API](https://app.swaggerhub.com/apis/ATAMANENKOALEX90/book-store/1.0.5) та у файлі: swagger.yaml 
 
 ### Розгортаня проекту локально (команди для Windows)
 
@@ -23,3 +22,8 @@
     ```
 4. В браузері перейти на головну сторінку
     http://0.0.0.0:8000/ або http://localhost:8000/
+
+
+### Скріни API документації
+![img.png](screenshots/img.png)
+![img_1.png](screenshots/img_1.png)

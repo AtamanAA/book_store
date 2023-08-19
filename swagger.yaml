@@ -58,9 +58,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Book_pagination_list'
+                $ref: '#/components/schemas/Book_pagination_list'
         '400':
           description: Bad request
           content:
