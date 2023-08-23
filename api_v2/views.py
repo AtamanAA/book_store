@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.urls import reverse
 from django.utils import timezone
+
 # from django.utils.decorators import method_decorator
 # from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
