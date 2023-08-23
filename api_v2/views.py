@@ -2,8 +2,8 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+# from django.utils.decorators import method_decorator
+# from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
@@ -25,7 +25,7 @@ from order.models import Order, OrderItem
 from order.mono import verify_signature, create_mono_order, get_mono_token
 
 
-@method_decorator(cache_page(60 * 5), name="list")
+# @method_decorator(cache_page(60 * 5), name="list")
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
@@ -76,7 +76,7 @@ class BookViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@method_decorator(cache_page(60 * 5), name="list")
+# @method_decorator(cache_page(60 * 5), name="list")
 class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
